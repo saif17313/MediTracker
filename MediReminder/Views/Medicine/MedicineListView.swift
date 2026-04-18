@@ -12,6 +12,7 @@ import SwiftData
 /// Organized into Active and Completed sections.
 struct MedicineListView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(UserSessionStore.self) private var session
     @State private var viewModel: MedicineListViewModel?
     @State private var showingAddMedicine = false
 
@@ -52,11 +53,12 @@ struct MedicineListView: View {
             }
             .onAppear {
                 if viewModel == nil {
-                    viewModel = MedicineListViewModel(modelContext: modelContext)
+                    viewModel = MedicineListViewModel(modelContext: modelContext, session: session)
                 }
                 viewModel?.fetchMedicines()
             }
             .refreshable {
+                await session.refreshCurrentUserData()
                 viewModel?.fetchMedicines()
             }
         }
@@ -76,13 +78,17 @@ struct MedicineListView: View {
                         }
                         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                             Button(role: .destructive) {
-                                vm.deleteMedicine(medicine)
+                                Task {
+                                    await vm.deleteMedicine(medicine)
+                                }
                             } label: {
                                 Label("Delete", systemImage: "trash")
                             }
 
                             Button {
-                                vm.toggleMedicineActive(medicine)
+                                Task {
+                                    await vm.toggleMedicineActive(medicine)
+                                }
                             } label: {
                                 Label("Complete", systemImage: "checkmark.circle")
                             }
@@ -110,13 +116,17 @@ struct MedicineListView: View {
                         }
                         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
                             Button(role: .destructive) {
-                                vm.deleteMedicine(medicine)
+                                Task {
+                                    await vm.deleteMedicine(medicine)
+                                }
                             } label: {
                                 Label("Delete", systemImage: "trash")
                             }
 
                             Button {
-                                vm.toggleMedicineActive(medicine)
+                                Task {
+                                    await vm.toggleMedicineActive(medicine)
+                                }
                             } label: {
                                 Label("Reactivate", systemImage: "arrow.counterclockwise")
                             }
@@ -162,4 +172,10 @@ struct MedicineListView: View {
 #Preview {
     MedicineListView()
         .modelContainer(PersistenceController.preview.modelContainer)
+        .environment(
+            UserSessionStore(
+                previewUser: AuthenticatedUser(uid: AppConstants.previewUserId, email: "preview@example.com"),
+                modelContext: PersistenceController.preview.modelContainer.mainContext
+            )
+        )
 }

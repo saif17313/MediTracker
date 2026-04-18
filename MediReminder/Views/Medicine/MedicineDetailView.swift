@@ -11,8 +11,8 @@ import SwiftData
 /// Displays detailed information for a single medicine.
 /// Shows medicine info, reminders list, recent dose history, and quick actions.
 struct MedicineDetailView: View {
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(UserSessionStore.self) private var session
 
     let medicine: Medicine
 
@@ -69,10 +69,14 @@ struct MedicineDetailView: View {
         .alert("Delete Medicine", isPresented: $showingDeleteAlert) {
             Button("Cancel", role: .cancel) {}
             Button("Delete", role: .destructive) {
-                NotificationService.shared.cancelAllReminders(for: medicine)
-                modelContext.delete(medicine)
-                try? modelContext.save()
-                dismiss()
+                Task {
+                    do {
+                        try await session.deleteMedicine(medicine)
+                        dismiss()
+                    } catch {
+                        print("Failed to delete medicine: \(error.localizedDescription)")
+                    }
+                }
             }
         } message: {
             Text("This will permanently delete \(medicine.name) and all its reminders and history. This cannot be undone.")
@@ -344,22 +348,26 @@ struct MedicineDetailView: View {
     // MARK: - Helpers
 
     private func recordDose(_ status: DoseStatus) {
-        let record = DoseHistory(
-            status: status,
-            scheduledTime: .now,
-            actionTime: .now,
-            medicine: medicine
-        )
-        modelContext.insert(record)
-        try? modelContext.save()
+        Task {
+            do {
+                _ = try await session.recordDose(
+                    medicine: medicine,
+                    status: status,
+                    scheduledTime: .now,
+                    actionTime: .now
+                )
+            } catch {
+                print("Failed to record dose: \(error.localizedDescription)")
+            }
+        }
     }
 }
 
 // MARK: - Edit Medicine Sheet
 
 struct EditMedicineSheet: View {
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(UserSessionStore.self) private var session
 
     let medicine: Medicine
     @State private var viewModel: MedicineDetailViewModel?
@@ -381,15 +389,17 @@ struct EditMedicineSheet: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        if viewModel?.save() != nil {
-                            dismiss()
+                        Task {
+                            if await (viewModel?.save() ?? false) {
+                                dismiss()
+                            }
                         }
                     }
-                    .disabled(!(viewModel?.isValid ?? false))
+                    .disabled(!(viewModel?.isValid ?? false) || (viewModel?.isSaving ?? false))
                 }
             }
             .onAppear {
-                viewModel = MedicineDetailViewModel(medicine: medicine, modelContext: modelContext)
+                viewModel = MedicineDetailViewModel(medicine: medicine, session: session)
             }
         }
     }
@@ -404,9 +414,16 @@ struct EditMedicineSheet: View {
                 name: "Aspirin",
                 dosage: "500mg",
                 form: .tablet,
-                instructions: "Take after food with water"
+                instructions: "Take after food with water",
+                ownerUserId: AppConstants.previewUserId
             )
         )
     }
     .modelContainer(PersistenceController.preview.modelContainer)
+    .environment(
+        UserSessionStore(
+            previewUser: AuthenticatedUser(uid: AppConstants.previewUserId, email: "preview@example.com"),
+            modelContext: PersistenceController.preview.modelContainer.mainContext
+        )
+    )
 }

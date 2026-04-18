@@ -11,7 +11,7 @@ import SwiftData
 /// Displays all reminders for a specific medicine.
 /// Allows adding, toggling, and deleting reminders.
 struct ReminderListView: View {
-    @Environment(\.modelContext) private var modelContext
+    @Environment(UserSessionStore.self) private var session
     let medicine: Medicine
 
     @State private var viewModel: ReminderViewModel?
@@ -61,7 +61,9 @@ struct ReminderListView: View {
                                 reminderRow(reminder, vm: vm)
                             }
                             .onDelete { offsets in
-                                vm.deleteReminders(at: offsets)
+                                Task {
+                                    await vm.deleteReminders(at: offsets)
+                                }
                             }
                         }
                     }
@@ -122,7 +124,7 @@ struct ReminderListView: View {
         }
         .onAppear {
             if viewModel == nil {
-                viewModel = ReminderViewModel(medicine: medicine, modelContext: modelContext)
+                viewModel = ReminderViewModel(medicine: medicine, session: session)
             }
             viewModel?.loadReminders()
             Task {
@@ -147,7 +149,11 @@ struct ReminderListView: View {
 
             Toggle("", isOn: Binding(
                 get: { reminder.isEnabled },
-                set: { _ in vm.toggleReminder(reminder) }
+                set: { _ in
+                    Task {
+                        await vm.toggleReminder(reminder)
+                    }
+                }
             ))
             .labelsHidden()
         }
@@ -160,8 +166,19 @@ struct ReminderListView: View {
 #Preview {
     NavigationStack {
         ReminderListView(
-            medicine: Medicine(name: "Aspirin", dosage: "500mg", form: .tablet)
+            medicine: Medicine(
+                name: "Aspirin",
+                dosage: "500mg",
+                form: .tablet,
+                ownerUserId: AppConstants.previewUserId
+            )
         )
     }
     .modelContainer(PersistenceController.preview.modelContainer)
+    .environment(
+        UserSessionStore(
+            previewUser: AuthenticatedUser(uid: AppConstants.previewUserId, email: "preview@example.com"),
+            modelContext: PersistenceController.preview.modelContainer.mainContext
+        )
+    )
 }

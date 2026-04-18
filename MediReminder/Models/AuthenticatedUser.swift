@@ -8,7 +8,7 @@
 import Foundation
 
 /// Lightweight representation of the signed-in Firebase user.
-struct AuthenticatedUser: Equatable {
+struct AuthenticatedUser: Equatable, Sendable {
     let uid: String
     let email: String
 }

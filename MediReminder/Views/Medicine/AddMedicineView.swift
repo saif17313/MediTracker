@@ -11,8 +11,8 @@ import SwiftData
 /// A sheet view for adding a new medicine.
 /// Contains a form with all medicine fields and validation.
 struct AddMedicineView: View {
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(UserSessionStore.self) private var session
 
     @State private var viewModel: MedicineDetailViewModel?
 
@@ -38,18 +38,20 @@ struct AddMedicineView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        if viewModel?.save() != nil {
-                            onSaved?()
-                            dismiss()
+                        Task {
+                            if await (viewModel?.save() ?? false) {
+                                onSaved?()
+                                dismiss()
+                            }
                         }
                     }
                     .fontWeight(.semibold)
-                    .disabled(!(viewModel?.isValid ?? false))
+                    .disabled(!(viewModel?.isValid ?? false) || (viewModel?.isSaving ?? false))
                 }
             }
             .onAppear {
                 if viewModel == nil {
-                    viewModel = MedicineDetailViewModel(modelContext: modelContext)
+                    viewModel = MedicineDetailViewModel(session: session)
                 }
             }
         }
@@ -169,4 +171,10 @@ struct MedicineFormContent: View {
 #Preview {
     AddMedicineView()
         .modelContainer(PersistenceController.preview.modelContainer)
+        .environment(
+            UserSessionStore(
+                previewUser: AuthenticatedUser(uid: AppConstants.previewUserId, email: "preview@example.com"),
+                modelContext: PersistenceController.preview.modelContainer.mainContext
+            )
+        )
 }

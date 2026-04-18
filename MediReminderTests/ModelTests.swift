@@ -26,6 +26,7 @@ struct ModelTests {
         #expect(medicine.dosage == "500mg")
         #expect(medicine.form == .tablet)
         #expect(medicine.instructions == "Take after food")
+        #expect(medicine.ownerUserId == "")
         #expect(medicine.isActive == true)
         #expect(medicine.endDate == nil)
         #expect(medicine.reminders.isEmpty)

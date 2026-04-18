@@ -26,6 +26,7 @@
 		6F33CA57B35E04EF0A1D0EAC /* AddReminderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D35D07D030F3B22C7E1770B /* AddReminderView.swift */; };
 		7028529044D310153C7B952A /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AADF7A30CF0F39834C68310 /* AuthService.swift */; };
 		7658634E38F55DF98BED01CA /* DoseHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76F8E2944AAD47C5FF1D077C /* DoseHistoryView.swift */; };
+		77DDD9B3539A9528E28C7208 /* UserDataSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62470AA367F9D627D0FD6E53 /* UserDataSyncService.swift */; };
 		86385E226B7C27827D6CDD4C /* AuthenticatedUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B4FF1751FDFC58EEA231CF3 /* AuthenticatedUser.swift */; };
 		8A29C77663988F676A93DB3F /* AuthGateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A12D589AA7B2801D5B4D4BC /* AuthGateView.swift */; };
 		8C7271E162567DDEDC2EAFDA /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D79B7CB3FBEACB987E6CF7 /* CalendarView.swift */; };
@@ -78,6 +79,7 @@
 		5B4FF1751FDFC58EEA231CF3 /* AuthenticatedUser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticatedUser.swift; sourceTree = "<group>"; };
 		5B95CA23A497EC24A848D300 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
 		5FF3A53137F454A5B428F6AD /* MedicineListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicineListView.swift; sourceTree = "<group>"; };
+		62470AA367F9D627D0FD6E53 /* UserDataSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDataSyncService.swift; sourceTree = "<group>"; };
 		6E4D596CDA8D0C6510DB0756 /* DoseBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseBadge.swift; sourceTree = "<group>"; };
 		760C7684C834B1E4F86314A3 /* MedicineDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicineDetailViewModel.swift; sourceTree = "<group>"; };
 		76F8E2944AAD47C5FF1D077C /* DoseHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseHistoryView.swift; sourceTree = "<group>"; };
@@ -178,6 +180,7 @@
 				C9176415C7B9076B14DA9F9A /* NotificationService.swift */,
 				136D548D07004CECD0B0EE15 /* OpenFDAService.swift */,
 				5B95CA23A497EC24A848D300 /* PersistenceController.swift */,
+				62470AA367F9D627D0FD6E53 /* UserDataSyncService.swift */,
 				4877C553A78217CCC407707F /* UserSessionStore.swift */,
 			);
 			path = Services;
@@ -428,6 +431,7 @@
 				67F2F8A661EBFC9E8E856FEC /* ReminderListView.swift in Sources */,
 				49B3E67419EE32A784909049 /* ReminderViewModel.swift in Sources */,
 				A7EEFB9A79817F6CDE354C46 /* TimePickerField.swift in Sources */,
+				77DDD9B3539A9528E28C7208 /* UserDataSyncService.swift in Sources */,
 				A4F14BAFAC809D16E509FDCE /* UserSessionStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

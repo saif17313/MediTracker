@@ -54,6 +54,7 @@ struct PersistenceController {
     @MainActor
     private func addSampleData() {
         let context = modelContainer.mainContext
+        let previewUserId = AppConstants.previewUserId
 
         // Sample Medicine 1: Aspirin
         let aspirin = Medicine(
@@ -61,7 +62,8 @@ struct PersistenceController {
             dosage: "500mg",
             form: .tablet,
             instructions: "Take after food with water",
-            startDate: Calendar.current.date(byAdding: .day, value: -7, to: .now) ?? .now
+            startDate: Calendar.current.date(byAdding: .day, value: -7, to: .now) ?? .now,
+            ownerUserId: previewUserId
         )
         context.insert(aspirin)
 
@@ -83,7 +85,8 @@ struct PersistenceController {
             form: .capsule,
             instructions: "Take before meals",
             startDate: Calendar.current.date(byAdding: .day, value: -3, to: .now) ?? .now,
-            endDate: Calendar.current.date(byAdding: .day, value: 4, to: .now)
+            endDate: Calendar.current.date(byAdding: .day, value: 4, to: .now),
+            ownerUserId: previewUserId
         )
         context.insert(amoxicillin)
 
@@ -101,7 +104,8 @@ struct PersistenceController {
             name: "Dextromethorphan",
             dosage: "10ml",
             form: .syrup,
-            instructions: "Take before sleep"
+            instructions: "Take before sleep",
+            ownerUserId: previewUserId
         )
         context.insert(coughSyrup)
 

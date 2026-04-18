@@ -13,6 +13,7 @@ import Foundation
 @Model
 final class Reminder {
     var id: UUID
+    var ownerUserId: String
     var time: Date
     var frequency: ReminderFrequency
     var daysOfWeek: [Int]
@@ -31,6 +32,7 @@ final class Reminder {
         snoozeDurationMinutes: Int = 10
     ) {
         self.id = UUID()
+        self.ownerUserId = medicine.ownerUserId
         self.time = time
         self.frequency = frequency
         self.daysOfWeek = daysOfWeek

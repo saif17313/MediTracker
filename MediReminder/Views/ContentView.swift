@@ -33,6 +33,7 @@ struct ContentView: View {
 /// Main signed-in application shell with the tab navigation.
 struct AuthenticatedHomeView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(UserSessionStore.self) private var session
     @State private var selectedTab: AppTab = .medicines
     @State private var navigateToMedicineId: UUID?
 
@@ -89,14 +90,18 @@ struct AuthenticatedHomeView: View {
         )
         guard let medicine = try? modelContext.fetch(descriptor).first else { return }
 
-        let record = DoseHistory(
-            status: status,
-            scheduledTime: scheduledTime,
-            actionTime: .now,
-            medicine: medicine
-        )
-        modelContext.insert(record)
-        try? modelContext.save()
+        Task {
+            do {
+                _ = try await session.recordDose(
+                    medicine: medicine,
+                    status: status,
+                    scheduledTime: scheduledTime,
+                    actionTime: .now
+                )
+            } catch {
+                print("Failed to sync dose action: \(error.localizedDescription)")
+            }
+        }
     }
 }
 

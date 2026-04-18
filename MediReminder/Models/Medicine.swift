@@ -13,6 +13,7 @@ import Foundation
 @Model
 final class Medicine {
     var id: UUID
+    var ownerUserId: String
     var name: String
     var dosage: String
     var form: MedicineForm
@@ -36,9 +37,11 @@ final class Medicine {
         form: MedicineForm,
         instructions: String = "",
         startDate: Date = .now,
-        endDate: Date? = nil
+        endDate: Date? = nil,
+        ownerUserId: String = ""
     ) {
         self.id = UUID()
+        self.ownerUserId = ownerUserId
         self.name = name
         self.dosage = dosage
         self.form = form

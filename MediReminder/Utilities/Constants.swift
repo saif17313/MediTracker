@@ -11,6 +11,9 @@ import Foundation
 
 /// App-wide constant values
 enum AppConstants {
+    /// Preview/test user id used for local-only sample data.
+    static let previewUserId = "preview-user"
+
     /// Default snooze duration in minutes
     static let defaultSnoozeDurationMinutes = 10
 

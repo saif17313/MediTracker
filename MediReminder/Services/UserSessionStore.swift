@@ -15,20 +15,24 @@ import SwiftData
 final class UserSessionStore {
     private let modelContext: ModelContext
     private let authService: AuthService?
+    private let dataSyncService: UserDataSyncService
 
     private(set) var firebaseConfigurationState: FirebaseConfigurationState
     private(set) var authState: AuthSessionState = .loading
     private(set) var isWorking: Bool = false
+    private(set) var isSyncingCloudData: Bool = false
     private(set) var infoMessage: String?
     var errorMessage: String?
 
     init(
         modelContext: ModelContext,
         authService: AuthService? = AuthService(),
+        dataSyncService: UserDataSyncService = UserDataSyncService(),
         firebaseConfigurationState: FirebaseConfigurationState
     ) {
         self.modelContext = modelContext
         self.authService = authService
+        self.dataSyncService = dataSyncService
         self.firebaseConfigurationState = firebaseConfigurationState
 
         if firebaseConfigurationState.isConfigured {
@@ -42,6 +46,7 @@ final class UserSessionStore {
         self.init(
             modelContext: modelContext,
             authService: nil,
+            dataSyncService: UserDataSyncService(),
             firebaseConfigurationState: .configured
         )
         if let previewUser {
@@ -57,7 +62,10 @@ final class UserSessionStore {
     }
 
     var currentUserEmail: String {
-        currentUser?.email.isEmpty == false ? currentUser?.email ?? "" : "Signed in user"
+        guard let email = currentUser?.email, !email.isEmpty else {
+            return "Signed in user"
+        }
+        return email
     }
 
     var isAuthenticated: Bool {
@@ -138,6 +146,170 @@ final class UserSessionStore {
         infoMessage = nil
     }
 
+    func refreshCurrentUserData() async {
+        guard let user = currentUser else { return }
+
+        isSyncingCloudData = true
+        errorMessage = nil
+
+        do {
+            let medicines = try await dataSyncService.refreshData(for: user, in: modelContext)
+            NotificationService.shared.refreshAllReminders(medicines: medicines)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+
+        isSyncingCloudData = false
+    }
+
+    func saveMedicine(
+        existingMedicine: Medicine? = nil,
+        name: String,
+        dosage: String,
+        form: MedicineForm,
+        instructions: String,
+        startDate: Date,
+        endDate: Date?
+    ) async throws {
+        guard let user = currentUser else {
+            throw UserDataSyncError.unauthenticated
+        }
+
+        isSyncingCloudData = true
+        defer { isSyncingCloudData = false }
+
+        _ = try await dataSyncService.saveMedicine(
+            for: user,
+            existingMedicine: existingMedicine,
+            name: name,
+            dosage: dosage,
+            form: form,
+            instructions: instructions,
+            startDate: startDate,
+            endDate: endDate,
+            in: modelContext
+        )
+        NotificationService.shared.refreshAllReminders(medicines: localMedicinesForCurrentUser())
+    }
+
+    func deleteMedicine(_ medicine: Medicine) async throws {
+        guard let user = currentUser else {
+            throw UserDataSyncError.unauthenticated
+        }
+
+        isSyncingCloudData = true
+        defer { isSyncingCloudData = false }
+
+        try await dataSyncService.deleteMedicine(medicine, for: user, in: modelContext)
+        NotificationService.shared.refreshAllReminders(medicines: localMedicinesForCurrentUser())
+    }
+
+    func setMedicineActive(_ medicine: Medicine, isActive: Bool) async throws {
+        guard let user = currentUser else {
+            throw UserDataSyncError.unauthenticated
+        }
+
+        isSyncingCloudData = true
+        defer { isSyncingCloudData = false }
+
+        try await dataSyncService.setMedicineActive(medicine, isActive: isActive, for: user, in: modelContext)
+        NotificationService.shared.refreshAllReminders(medicines: localMedicinesForCurrentUser())
+    }
+
+    @discardableResult
+    func saveReminder(
+        medicine: Medicine,
+        existingReminder: Reminder? = nil,
+        time: Date,
+        frequency: ReminderFrequency,
+        daysOfWeek: [Int],
+        isEnabled: Bool,
+        snoozeDurationMinutes: Int
+    ) async throws -> UUID {
+        guard let user = currentUser else {
+            throw UserDataSyncError.unauthenticated
+        }
+
+        isSyncingCloudData = true
+        defer { isSyncingCloudData = false }
+
+        let reminderId = try await dataSyncService.saveReminder(
+            for: user,
+            medicine: medicine,
+            existingReminder: existingReminder,
+            time: time,
+            frequency: frequency,
+            daysOfWeek: daysOfWeek,
+            isEnabled: isEnabled,
+            snoozeDurationMinutes: snoozeDurationMinutes,
+            in: modelContext
+        )
+        NotificationService.shared.refreshAllReminders(medicines: localMedicinesForCurrentUser())
+        return reminderId
+    }
+
+    func deleteReminder(_ reminder: Reminder) async throws {
+        guard let user = currentUser else {
+            throw UserDataSyncError.unauthenticated
+        }
+
+        isSyncingCloudData = true
+        defer { isSyncingCloudData = false }
+
+        try await dataSyncService.deleteReminder(reminder, for: user, in: modelContext)
+        NotificationService.shared.refreshAllReminders(medicines: localMedicinesForCurrentUser())
+    }
+
+    @discardableResult
+    func recordDose(
+        medicine: Medicine,
+        status: DoseStatus,
+        scheduledTime: Date,
+        actionTime: Date?,
+        notes: String = ""
+    ) async throws -> UUID {
+        guard let user = currentUser else {
+            throw UserDataSyncError.unauthenticated
+        }
+
+        isSyncingCloudData = true
+        defer { isSyncingCloudData = false }
+
+        let recordId = try await dataSyncService.recordDose(
+            for: user,
+            medicine: medicine,
+            status: status,
+            scheduledTime: scheduledTime,
+            actionTime: actionTime,
+            notes: notes,
+            in: modelContext
+        )
+        NotificationService.shared.refreshAllReminders(medicines: localMedicinesForCurrentUser())
+        return recordId
+    }
+
+    func updateDoseRecord(_ record: DoseHistory, newStatus: DoseStatus) async throws {
+        guard let user = currentUser else {
+            throw UserDataSyncError.unauthenticated
+        }
+
+        isSyncingCloudData = true
+        defer { isSyncingCloudData = false }
+
+        try await dataSyncService.updateDoseRecord(record, newStatus: newStatus, for: user, in: modelContext)
+    }
+
+    func deleteDoseRecord(_ record: DoseHistory) async throws {
+        guard let user = currentUser else {
+            throw UserDataSyncError.unauthenticated
+        }
+
+        isSyncingCloudData = true
+        defer { isSyncingCloudData = false }
+
+        try await dataSyncService.deleteDoseRecord(record, for: user, in: modelContext)
+    }
+
     private func startAuthObservation() {
         authService?.startListening { [weak self] state in
             Task { @MainActor [weak self] in
@@ -153,6 +325,7 @@ final class UserSessionStore {
                 case .signedIn:
                     self.clearLocalData()
                     NotificationService.shared.cancelAllPendingReminders()
+                    await self.refreshCurrentUserData()
                 }
             }
         }
@@ -183,4 +356,16 @@ final class UserSessionStore {
             errorMessage = "Failed to reset local data: \(error.localizedDescription)"
         }
     }
+
+    private func localMedicinesForCurrentUser() -> [Medicine] {
+        guard let currentUser else { return [] }
+        let userId = currentUser.uid
+
+        let descriptor = FetchDescriptor<Medicine>(
+            predicate: #Predicate { $0.ownerUserId == userId },
+            sortBy: [SortDescriptor(\.name, order: .forward)]
+        )
+        return (try? modelContext.fetch(descriptor)) ?? []
+    }
+
 }

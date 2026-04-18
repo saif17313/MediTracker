@@ -9,7 +9,7 @@ import Foundation
 import FirebaseAuth
 
 /// Authentication state reported by Firebase Auth.
-enum AuthSessionState: Equatable {
+enum AuthSessionState: Equatable, Sendable {
     case loading
     case signedOut
     case signedIn(AuthenticatedUser)

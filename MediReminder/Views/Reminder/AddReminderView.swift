@@ -103,11 +103,15 @@ struct AddReminderView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Add") {
-                        viewModel.addReminder()
-                        dismiss()
+                        Task {
+                            await viewModel.addReminder()
+                            if viewModel.errorMessage == nil {
+                                dismiss()
+                            }
+                        }
                     }
                     .fontWeight(.semibold)
-                    .disabled(!isFormValid)
+                    .disabled(!isFormValid || viewModel.isLoading)
                 }
             }
         }
@@ -174,8 +178,16 @@ struct AddReminderView: View {
 #Preview {
     AddReminderView(
         viewModel: ReminderViewModel(
-            medicine: Medicine(name: "Aspirin", dosage: "500mg", form: .tablet),
-            modelContext: PersistenceController.preview.modelContainer.mainContext
+            medicine: Medicine(
+                name: "Aspirin",
+                dosage: "500mg",
+                form: .tablet,
+                ownerUserId: AppConstants.previewUserId
+            ),
+            session: UserSessionStore(
+                previewUser: AuthenticatedUser(uid: AppConstants.previewUserId, email: "preview@example.com"),
+                modelContext: PersistenceController.preview.modelContainer.mainContext
+            )
         )
     )
 }

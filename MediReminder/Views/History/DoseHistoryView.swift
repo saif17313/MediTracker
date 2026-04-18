@@ -12,6 +12,7 @@ import SwiftData
 /// Shows adherence statistics and a sectioned date-grouped list.
 struct DoseHistoryView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(UserSessionStore.self) private var session
     @State private var viewModel: DoseHistoryViewModel?
 
     @Query(sort: \Medicine.name) private var allMedicines: [Medicine]
@@ -32,11 +33,12 @@ struct DoseHistoryView: View {
             .navigationTitle("Dose History")
             .onAppear {
                 if viewModel == nil {
-                    viewModel = DoseHistoryViewModel(modelContext: modelContext)
+                    viewModel = DoseHistoryViewModel(modelContext: modelContext, session: session)
                 }
                 viewModel?.fetchHistory()
             }
             .refreshable {
+                await session.refreshCurrentUserData()
                 viewModel?.fetchHistory()
             }
         }
@@ -69,7 +71,9 @@ struct DoseHistoryView: View {
                                 doseHistoryRow(record)
                                     .swipeActions(edge: .trailing) {
                                         Button(role: .destructive) {
-                                            vm.deleteRecord(record)
+                                            Task {
+                                                await vm.deleteRecord(record)
+                                            }
                                         } label: {
                                             Label("Delete", systemImage: "trash")
                                         }
@@ -78,7 +82,9 @@ struct DoseHistoryView: View {
                                         // Quick status change
                                         if record.status != .taken {
                                             Button {
-                                                vm.updateDoseStatus(record, newStatus: .taken)
+                                                Task {
+                                                    await vm.updateDoseStatus(record, newStatus: .taken)
+                                                }
                                             } label: {
                                                 Label("Taken", systemImage: "checkmark")
                                             }
@@ -86,7 +92,9 @@ struct DoseHistoryView: View {
                                         }
                                         if record.status != .skipped {
                                             Button {
-                                                vm.updateDoseStatus(record, newStatus: .skipped)
+                                                Task {
+                                                    await vm.updateDoseStatus(record, newStatus: .skipped)
+                                                }
                                             } label: {
                                                 Label("Skip", systemImage: "forward")
                                             }
@@ -213,7 +221,7 @@ struct DoseHistoryView: View {
                             Text("All Medicines")
                         }
                     }
-                    ForEach(allMedicines) { medicine in
+                    ForEach(allMedicines.filter { $0.ownerUserId == (session.currentUser?.uid ?? "") }) { medicine in
                         Button {
                             vm.selectedMedicineFilter = medicine
                         } label: {
@@ -335,4 +343,10 @@ struct DoseHistoryView: View {
 #Preview {
     DoseHistoryView()
         .modelContainer(PersistenceController.preview.modelContainer)
+        .environment(
+            UserSessionStore(
+                previewUser: AuthenticatedUser(uid: AppConstants.previewUserId, email: "preview@example.com"),
+                modelContext: PersistenceController.preview.modelContainer.mainContext
+            )
+        )
 }

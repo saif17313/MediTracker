@@ -24,9 +24,11 @@ final class DoseHistoryViewModel {
     var selectedStatusFilter: DoseStatus?
 
     private let modelContext: ModelContext
+    private let session: UserSessionStore
 
-    init(modelContext: ModelContext) {
+    init(modelContext: ModelContext, session: UserSessionStore) {
         self.modelContext = modelContext
+        self.session = session
     }
 
     // MARK: - Computed Properties
@@ -92,8 +94,15 @@ final class DoseHistoryViewModel {
         isLoading = true
         errorMessage = nil
 
+        guard let userId = session.currentUser?.uid else {
+            allHistory = []
+            isLoading = false
+            return
+        }
+
         do {
             let descriptor = FetchDescriptor<DoseHistory>(
+                predicate: #Predicate { $0.ownerUserId == userId },
                 sortBy: [SortDescriptor(\.scheduledTime, order: .reverse)]
             )
             allHistory = try modelContext.fetch(descriptor)
@@ -106,31 +115,50 @@ final class DoseHistoryViewModel {
     }
 
     /// Records a dose action for a medicine at the current time.
-    func recordDose(medicine: Medicine, status: DoseStatus, scheduledTime: Date = .now, notes: String = "") {
-        let record = DoseHistory(
-            status: status,
-            scheduledTime: scheduledTime,
-            actionTime: .now,
-            medicine: medicine,
-            notes: notes
-        )
-        modelContext.insert(record)
-        save()
-        fetchHistory()
+    func recordDose(
+        medicine: Medicine,
+        status: DoseStatus,
+        scheduledTime: Date = .now,
+        notes: String = ""
+    ) async {
+        errorMessage = nil
+
+        do {
+            _ = try await session.recordDose(
+                medicine: medicine,
+                status: status,
+                scheduledTime: scheduledTime,
+                actionTime: .now,
+                notes: notes
+            )
+            fetchHistory()
+        } catch {
+            errorMessage = "Failed to record dose: \(error.localizedDescription)"
+        }
     }
 
     /// Updates an existing dose record's status.
-    func updateDoseStatus(_ record: DoseHistory, newStatus: DoseStatus) {
-        record.status = newStatus
-        record.actionTime = .now
-        save()
+    func updateDoseStatus(_ record: DoseHistory, newStatus: DoseStatus) async {
+        errorMessage = nil
+
+        do {
+            try await session.updateDoseRecord(record, newStatus: newStatus)
+            fetchHistory()
+        } catch {
+            errorMessage = "Failed to update dose history: \(error.localizedDescription)"
+        }
     }
 
     /// Deletes a dose history record.
-    func deleteRecord(_ record: DoseHistory) {
-        modelContext.delete(record)
-        save()
-        fetchHistory()
+    func deleteRecord(_ record: DoseHistory) async {
+        errorMessage = nil
+
+        do {
+            try await session.deleteDoseRecord(record)
+            fetchHistory()
+        } catch {
+            errorMessage = "Failed to delete record: \(error.localizedDescription)"
+        }
     }
 
     /// Fetches daily adherence data for the calendar view.
@@ -154,16 +182,6 @@ final class DoseHistoryViewModel {
         }
 
         return result
-    }
-
-    // MARK: - Private
-
-    private func save() {
-        do {
-            try modelContext.save()
-        } catch {
-            errorMessage = "Failed to save: \(error.localizedDescription)"
-        }
     }
 }
 
