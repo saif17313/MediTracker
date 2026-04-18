@@ -172,7 +172,8 @@ struct MedicineDetailView: View {
                 quickActionButton(
                     title: "Take Now",
                     icon: "checkmark.circle.fill",
-                    color: .green
+                    color: .green,
+                    isDisabled: !canTakeNow
                 ) {
                     recordDose(.taken)
                 }
@@ -181,7 +182,8 @@ struct MedicineDetailView: View {
                 quickActionButton(
                     title: "Skip",
                     icon: "forward.fill",
-                    color: .orange
+                    color: .orange,
+                    isDisabled: skipIsDisabled
                 ) {
                     recordDose(.skipped)
                 }
@@ -207,11 +209,11 @@ struct MedicineDetailView: View {
 
             Text(takeNowStatusText)
                 .font(.caption2)
-                .foregroundStyle(canTakeNow ? .green : .secondary)
+                .foregroundStyle(skipIsDisabled ? .orange : canTakeNow ? .green : .secondary)
         }
     }
 
-    private func quickActionButton(title: String, icon: String, color: Color, action: @escaping () -> Void) -> some View {
+    private func quickActionButton(title: String, icon: String, color: Color, isDisabled: Bool = false, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             VStack(spacing: 6) {
                 Image(systemName: icon)
@@ -226,8 +228,8 @@ struct MedicineDetailView: View {
             .background(color.opacity(0.1))
             .clipShape(RoundedRectangle(cornerRadius: 10))
         }
-        .disabled(title == "Take Now" && !canTakeNow)
-        .opacity(title == "Take Now" && !canTakeNow ? 0.45 : 1.0)
+        .disabled(isDisabled)
+        .opacity(isDisabled ? 0.45 : 1.0)
     }
 
     // MARK: - Reminders Section
@@ -363,6 +365,10 @@ struct MedicineDetailView: View {
             guard let activeWindow = selectedActiveTakeNowWindow else { return }
             scheduledTime = activeWindow.occurrenceStart
             notes = "take_now_reminder:\(activeWindow.reminder.id.uuidString)"
+        } else if status == .skipped, let activeWindow = selectedActiveTakeNowWindow {
+            // Link skip to the active window so Take Now is also disabled after a skip
+            scheduledTime = activeWindow.occurrenceStart
+            notes = "take_now_reminder:\(activeWindow.reminder.id.uuidString)"
         }
 
         Task {
@@ -381,6 +387,12 @@ struct MedicineDetailView: View {
     }
 
     private var takeNowStatusText: String {
+        if skipIsDisabled {
+            return "Already taken — Skip is not available for this reminder window."
+        }
+        if !canTakeNow && hasSkippedCurrentWindow {
+            return "Already skipped — Take Now is not available for this reminder window."
+        }
         if canTakeNow {
             if let activeWindow = selectedActiveTakeNowWindow {
                 let end = activeWindow.windowEnd.fullString
@@ -417,7 +429,7 @@ struct MedicineDetailView: View {
                     return nil
                 }
 
-                guard !hasTakenRecord(for: reminder, occurrenceStart: occurrenceStart) else {
+                guard !hasActionRecord(for: reminder, occurrenceStart: occurrenceStart) else {
                     return nil
                 }
 
@@ -425,13 +437,53 @@ struct MedicineDetailView: View {
             }
     }
 
-    private func hasTakenRecord(for reminder: Reminder, occurrenceStart: Date) -> Bool {
+    /// Returns true if any action (taken OR skipped) was recorded for this reminder occurrence.
+    /// Used to exclude the window from activeTakeNowWindows so both buttons disable after either action.
+    private func hasActionRecord(for reminder: Reminder, occurrenceStart: Date) -> Bool {
         let marker = "take_now_reminder:\(reminder.id.uuidString)"
         return medicine.doseHistory.contains { record in
-            guard record.status == .taken else { return false }
+            guard record.status == .taken || record.status == .skipped else { return false }
             guard record.notes.contains(marker) else { return false }
             return abs(record.scheduledTime.timeIntervalSince(occurrenceStart)) < 60
         }
+    }
+
+    /// True when an active reminder window has already been taken — disables the Skip button.
+    private var skipIsDisabled: Bool {
+        let now = Date.now
+        for reminder in medicine.reminders where reminder.isEnabled {
+            guard let occurrenceStart = mostRecentOccurrenceStart(for: reminder, now: now) else { continue }
+            let windowHours = max(reminder.takeNowWindowHours, 1)
+            guard let windowEnd = Calendar.current.date(byAdding: .hour, value: windowHours, to: occurrenceStart) else { continue }
+            guard now >= occurrenceStart, now <= windowEnd else { continue }
+            let marker = "take_now_reminder:\(reminder.id.uuidString)"
+            let alreadyTaken = medicine.doseHistory.contains { record in
+                guard record.status == .taken else { return false }
+                guard record.notes.contains(marker) else { return false }
+                return abs(record.scheduledTime.timeIntervalSince(occurrenceStart)) < 60
+            }
+            if alreadyTaken { return true }
+        }
+        return false
+    }
+
+    /// True when an active reminder window has already been skipped (for status text only).
+    private var hasSkippedCurrentWindow: Bool {
+        let now = Date.now
+        for reminder in medicine.reminders where reminder.isEnabled {
+            guard let occurrenceStart = mostRecentOccurrenceStart(for: reminder, now: now) else { continue }
+            let windowHours = max(reminder.takeNowWindowHours, 1)
+            guard let windowEnd = Calendar.current.date(byAdding: .hour, value: windowHours, to: occurrenceStart) else { continue }
+            guard now >= occurrenceStart, now <= windowEnd else { continue }
+            let marker = "take_now_reminder:\(reminder.id.uuidString)"
+            let alreadySkipped = medicine.doseHistory.contains { record in
+                guard record.status == .skipped else { return false }
+                guard record.notes.contains(marker) else { return false }
+                return abs(record.scheduledTime.timeIntervalSince(occurrenceStart)) < 60
+            }
+            if alreadySkipped { return true }
+        }
+        return false
     }
 
     private func mostRecentOccurrenceStart(for reminder: Reminder, now: Date) -> Date? {
