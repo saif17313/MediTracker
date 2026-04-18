@@ -21,6 +21,7 @@ final class ReminderViewModel {
     }()
     var selectedFrequency: ReminderFrequency = .daily
     var selectedDaysOfWeek: Set<Int> = []
+    var selectedCustomIntervalDays: Int = 1
     var snoozeDuration: Int = AppConstants.defaultSnoozeDurationMinutes
 
     // MARK: - UI State
@@ -80,6 +81,7 @@ final class ReminderViewModel {
                 time: selectedTime,
                 frequency: selectedFrequency,
                 daysOfWeek: Array(selectedDaysOfWeek).sorted(),
+                customIntervalDays: selectedFrequency == .custom ? selectedCustomIntervalDays : nil,
                 isEnabled: true,
                 snoozeDurationMinutes: snoozeDuration
             )
@@ -153,6 +155,7 @@ final class ReminderViewModel {
         selectedTime = Calendar.current.date(bySettingHour: 8, minute: 0, second: 0, of: .now) ?? .now
         selectedFrequency = .daily
         selectedDaysOfWeek = []
+        selectedCustomIntervalDays = 1
         snoozeDuration = AppConstants.defaultSnoozeDurationMinutes
         showingAddReminder = false
     }
@@ -175,6 +178,7 @@ final class ReminderViewModel {
 
         selectedTime = time
         selectedFrequency = .daily
+        selectedCustomIntervalDays = 1
         Task {
             await addReminder()
         }

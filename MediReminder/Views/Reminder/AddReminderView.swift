@@ -66,6 +66,19 @@ struct AddReminderView: View {
                     }
                 }
 
+                if viewModel.selectedFrequency == .custom {
+                    Section("Custom Interval") {
+                        Stepper(value: $viewModel.selectedCustomIntervalDays, in: 1...30) {
+                            let interval = viewModel.selectedCustomIntervalDays
+                            Text(interval == 1 ? "Every 1 day" : "Every \(interval) days")
+                        }
+
+                        Text("Choose how many days to wait between reminders.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
                 // MARK: - Snooze Duration
                 Section("Snooze") {
                     Picker("Snooze Duration", selection: $viewModel.snoozeDuration) {
@@ -146,6 +159,9 @@ struct AddReminderView: View {
         if viewModel.selectedFrequency == .weekly && viewModel.selectedDaysOfWeek.isEmpty {
             return false
         }
+        if viewModel.selectedFrequency == .custom && viewModel.selectedCustomIntervalDays < 1 {
+            return false
+        }
         return true
     }
 
@@ -168,7 +184,9 @@ struct AddReminderView: View {
             }
             return "Every \(dayNames.joined(separator: ", ")) at \(timeStr)"
         case .custom:
-            return "Custom schedule at \(timeStr)"
+            let interval = viewModel.selectedCustomIntervalDays
+            let dayLabel = interval == 1 ? "day" : "days"
+            return "Every \(interval) \(dayLabel) at \(timeStr)"
         }
     }
 }

@@ -75,15 +75,15 @@ final class NotificationService {
             scheduleDailyReminder(content: content, reminder: reminder)
 
         case .everyOtherDay:
-            // Schedule for the next 30 days to handle every-other-day pattern
-            scheduleEveryOtherDay(content: content, reminder: reminder, medicine: medicine)
+            // Schedule for a fixed horizon to handle every-other-day pattern
+            scheduleIntervalReminder(content: content, reminder: reminder, medicine: medicine, intervalDays: 2)
 
         case .weekly:
             scheduleWeeklyReminder(content: content, reminder: reminder)
 
         case .custom:
-            // For custom, schedule daily and let the app logic handle filtering
-            scheduleDailyReminder(content: content, reminder: reminder)
+            let customInterval = max(reminder.customIntervalDays ?? 1, 1)
+            scheduleIntervalReminder(content: content, reminder: reminder, medicine: medicine, intervalDays: customInterval)
         }
     }
 
@@ -91,7 +91,7 @@ final class NotificationService {
     func cancelReminder(_ reminder: Reminder) {
         // Cancel the main notification and any variants (numbered identifiers)
         var identifiers = [reminder.notificationIdentifier]
-        for i in 0..<30 {
+        for i in 0..<90 {
             identifiers.append("\(reminder.notificationIdentifier)-\(i)")
         }
         for i in 1...7 {
@@ -166,13 +166,20 @@ final class NotificationService {
         }
     }
 
-    /// Schedules notifications for every other day over the next 30 days.
-    private func scheduleEveryOtherDay(content: UNMutableNotificationContent, reminder: Reminder, medicine: Medicine) {
+    /// Schedules notifications on a configurable N-day interval over a fixed horizon.
+    private func scheduleIntervalReminder(
+        content: UNMutableNotificationContent,
+        reminder: Reminder,
+        medicine: Medicine,
+        intervalDays: Int
+    ) {
         let calendar = Calendar.current
         let startDate = medicine.startDate
         let timeComponents = calendar.dateComponents([.hour, .minute], from: reminder.time)
+        let safeInterval = max(intervalDays, 1)
+        let schedulingHorizonDays = 90
 
-        for dayOffset in stride(from: 0, to: 30, by: 2) {
+        for dayOffset in stride(from: 0, to: schedulingHorizonDays, by: safeInterval) {
             guard let targetDate = calendar.date(byAdding: .day, value: dayOffset, to: startDate) else { continue }
 
             // Skip if the date is in the past
