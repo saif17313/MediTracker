@@ -107,6 +107,11 @@ final class NotificationService {
         }
     }
 
+    /// Cancels every pending reminder on the current device.
+    func cancelAllPendingReminders() {
+        center.removeAllPendingNotificationRequests()
+    }
+
     /// Reschedules all active reminders (call on app foreground to refresh).
     func refreshAllReminders(medicines: [Medicine]) {
         center.removeAllPendingNotificationRequests()

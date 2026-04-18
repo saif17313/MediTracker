@@ -14,3 +14,7 @@ DerivedData/
 # Local tooling caches
 .idea/
 *.log
+
+# Local Firebase configuration
+GoogleService-Info.plist
+MediReminder/Resources/GoogleService-Info.plist

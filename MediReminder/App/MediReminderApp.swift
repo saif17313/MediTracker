@@ -17,6 +17,7 @@ struct MediReminderApp: App {
 
     /// SwiftData model container for persistence
     let modelContainer: ModelContainer
+    let sessionStore: UserSessionStore
 
     init() {
         do {
@@ -37,6 +38,12 @@ struct MediReminderApp: App {
             fatalError("Failed to initialize ModelContainer: \(error.localizedDescription)")
         }
 
+        let firebaseConfigurationState = FirebaseBootstrapper.configureIfNeeded()
+        sessionStore = UserSessionStore(
+            modelContext: modelContainer.mainContext,
+            firebaseConfigurationState: firebaseConfigurationState
+        )
+
         // Register notification categories on launch
         NotificationService.shared.registerCategories()
     }
@@ -44,6 +51,7 @@ struct MediReminderApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(sessionStore)
         }
         .modelContainer(modelContainer)
     }

@@ -13,6 +13,7 @@
 		15C7D37A7BC25F7ED4F24B0D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 18E1667F1E82617EC2779CA4 /* Assets.xcassets */; };
 		2118471371F396914896935D /* ViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4591254037AC78E779F7CAEC /* ViewModelTests.swift */; };
 		21239F2D4F704C71D5AB1C28 /* MedicineDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 760C7684C834B1E4F86314A3 /* MedicineDetailViewModel.swift */; };
+		372778440604EDC1EE375B6C /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = EC5B0C3D1DAC4C6E99690035 /* FirebaseCore */; };
 		49B3E67419EE32A784909049 /* ReminderViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38EFCF294AF35EC4E9F80AC4 /* ReminderViewModel.swift */; };
 		4D4B23EE6BB35B4CD1417549 /* Reminder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7DEEE759A27D6FC4258AA06 /* Reminder.swift */; };
 		54059657BF546AEB610F0440 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A68CFCD6214092FD41F06BC /* ContentView.swift */; };
@@ -23,17 +24,24 @@
 		651D87471ECE575A52A14ABF /* AddMedicineView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09CBEB0672AB4B5F9C5E1701 /* AddMedicineView.swift */; };
 		67F2F8A661EBFC9E8E856FEC /* ReminderListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 188143F938E3C968925BA578 /* ReminderListView.swift */; };
 		6F33CA57B35E04EF0A1D0EAC /* AddReminderView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D35D07D030F3B22C7E1770B /* AddReminderView.swift */; };
+		7028529044D310153C7B952A /* AuthService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3AADF7A30CF0F39834C68310 /* AuthService.swift */; };
 		7658634E38F55DF98BED01CA /* DoseHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76F8E2944AAD47C5FF1D077C /* DoseHistoryView.swift */; };
+		86385E226B7C27827D6CDD4C /* AuthenticatedUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B4FF1751FDFC58EEA231CF3 /* AuthenticatedUser.swift */; };
+		8A29C77663988F676A93DB3F /* AuthGateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A12D589AA7B2801D5B4D4BC /* AuthGateView.swift */; };
 		8C7271E162567DDEDC2EAFDA /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D79B7CB3FBEACB987E6CF7 /* CalendarView.swift */; };
 		8CE42035B057444083B4BB63 /* DrugSearchViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EBC1CAFBA85E96B05B3F351 /* DrugSearchViewModel.swift */; };
 		97F7D61102129130EADF35F6 /* MedicineListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FF3A53137F454A5B428F6AD /* MedicineListView.swift */; };
 		9E1FD61B23BE0802A6913097 /* DoseHistoryViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 78027CB0172ED9D887B4ACF5 /* DoseHistoryViewModel.swift */; };
+		A4F14BAFAC809D16E509FDCE /* UserSessionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4877C553A78217CCC407707F /* UserSessionStore.swift */; };
 		A7EEFB9A79817F6CDE354C46 /* TimePickerField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1E37DD88B71DBCFF7CF2CC7D /* TimePickerField.swift */; };
+		AB0FE9743016501231B85082 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 7FC8E75ADA651E5D34109F56 /* FirebaseFirestore */; };
+		B4ABB084F8E47680FD5B2484 /* FirebaseBootstrapper.swift in Sources */ = {isa = PBXBuildFile; fileRef = 403E964948076548E800AFEE /* FirebaseBootstrapper.swift */; };
 		C575AA8D35D7C61B9DA63154 /* ModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A613057110366672D0615DB /* ModelTests.swift */; };
 		CAA399563553521897AC945E /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9D3B01CBCE53A6239264B1D /* Constants.swift */; };
 		CCD7F882DF1C798FAF4F83A9 /* MedicineDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED11FCA83101069EFACE80DB /* MedicineDetailView.swift */; };
 		CEBD19C4C216E5CE23FE02AA /* DoseBadge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6E4D596CDA8D0C6510DB0756 /* DoseBadge.swift */; };
 		D088988BC546CB1AF0634C78 /* MediReminderApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = F9515BEC7E4DEF599C63318F /* MediReminderApp.swift */; };
+		DF7AD35AE63E75D349A8F2F7 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 8721E12A66B89B40E6D2A6ED /* FirebaseAuth */; };
 		E46DA2A87D6DFD96C6959BA8 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9176415C7B9076B14DA9F9A /* NotificationService.swift */; };
 		E9C6F854F58E7D0A420DED83 /* OpenFDAServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAC0C05A215F9285D39A4DF2 /* OpenFDAServiceTests.swift */; };
 		F83AE1DFBF97D9FE2707BC93 /* OpenFDAService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 136D548D07004CECD0B0EE15 /* OpenFDAService.swift */; };
@@ -62,8 +70,12 @@
 		1E37DD88B71DBCFF7CF2CC7D /* TimePickerField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TimePickerField.swift; sourceTree = "<group>"; };
 		2A68CFCD6214092FD41F06BC /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		38EFCF294AF35EC4E9F80AC4 /* ReminderViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderViewModel.swift; sourceTree = "<group>"; };
+		3AADF7A30CF0F39834C68310 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
+		403E964948076548E800AFEE /* FirebaseBootstrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseBootstrapper.swift; sourceTree = "<group>"; };
 		4591254037AC78E779F7CAEC /* ViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModelTests.swift; sourceTree = "<group>"; };
+		4877C553A78217CCC407707F /* UserSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSessionStore.swift; sourceTree = "<group>"; };
 		53092E8175B9165860ADA188 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		5B4FF1751FDFC58EEA231CF3 /* AuthenticatedUser.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthenticatedUser.swift; sourceTree = "<group>"; };
 		5B95CA23A497EC24A848D300 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
 		5FF3A53137F454A5B428F6AD /* MedicineListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicineListView.swift; sourceTree = "<group>"; };
 		6E4D596CDA8D0C6510DB0756 /* DoseBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseBadge.swift; sourceTree = "<group>"; };
@@ -72,6 +84,7 @@
 		78027CB0172ED9D887B4ACF5 /* DoseHistoryViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseHistoryViewModel.swift; sourceTree = "<group>"; };
 		80781B8B8CAB9AF25CEA1C0B /* MedicineListViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicineListViewModel.swift; sourceTree = "<group>"; };
 		83140821E5E52343DF597077 /* MedicineRowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicineRowView.swift; sourceTree = "<group>"; };
+		8A12D589AA7B2801D5B4D4BC /* AuthGateView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthGateView.swift; sourceTree = "<group>"; };
 		8E6F9621C90501CEFD63C2BD /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 		920942EA26CBDA3BE1CAE391 /* DrugSearchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DrugSearchView.swift; sourceTree = "<group>"; };
 		A7DEEE759A27D6FC4258AA06 /* Reminder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Reminder.swift; sourceTree = "<group>"; };
@@ -87,10 +100,24 @@
 		FE8709EBF31233D0B7C9A4E5 /* Medicine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Medicine.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
+/* Begin PBXFrameworksBuildPhase section */
+		F54F31DFC270C41AD1A81E9A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				372778440604EDC1EE375B6C /* FirebaseCore in Frameworks */,
+				DF7AD35AE63E75D349A8F2F7 /* FirebaseAuth in Frameworks */,
+				AB0FE9743016501231B85082 /* FirebaseFirestore in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
 /* Begin PBXGroup section */
 		18D5987E7AD7779709383D51 /* Models */ = {
 			isa = PBXGroup;
 			children = (
+				5B4FF1751FDFC58EEA231CF3 /* AuthenticatedUser.swift */,
 				AC15055E6771D801102EC9C9 /* DoseHistory.swift */,
 				FE8709EBF31233D0B7C9A4E5 /* Medicine.swift */,
 				A7DEEE759A27D6FC4258AA06 /* Reminder.swift */,
@@ -117,6 +144,14 @@
 			path = Components;
 			sourceTree = "<group>";
 		};
+		3FB8DE821AA8382FC838FA3A /* Auth */ = {
+			isa = PBXGroup;
+			children = (
+				8A12D589AA7B2801D5B4D4BC /* AuthGateView.swift */,
+			);
+			path = Auth;
+			sourceTree = "<group>";
+		};
 		7A300868FE0FFDFFA47770E7 /* Reminder */ = {
 			isa = PBXGroup;
 			children = (
@@ -138,9 +173,12 @@
 		8265596B51D70B43782D0065 /* Services */ = {
 			isa = PBXGroup;
 			children = (
+				3AADF7A30CF0F39834C68310 /* AuthService.swift */,
+				403E964948076548E800AFEE /* FirebaseBootstrapper.swift */,
 				C9176415C7B9076B14DA9F9A /* NotificationService.swift */,
 				136D548D07004CECD0B0EE15 /* OpenFDAService.swift */,
 				5B95CA23A497EC24A848D300 /* PersistenceController.swift */,
+				4877C553A78217CCC407707F /* UserSessionStore.swift */,
 			);
 			path = Services;
 			sourceTree = "<group>";
@@ -209,6 +247,7 @@
 		D6917A0C30385E0B2642CDF7 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				3FB8DE821AA8382FC838FA3A /* Auth */,
 				2413733C4609AEA1C9FCDA2C /* Components */,
 				A686E9E814ECF8A80899C2DC /* History */,
 				9029CE389F8E6DC7F5D47D0B /* Medicine */,
@@ -275,6 +314,7 @@
 			buildPhases = (
 				B3F47B5AAB919D26E8E871DC /* Sources */,
 				68A428CF465C7D83E983F4B7 /* Resources */,
+				F54F31DFC270C41AD1A81E9A /* Frameworks */,
 			);
 			buildRules = (
 			);
@@ -282,6 +322,9 @@
 			);
 			name = MediReminder;
 			packageProductDependencies = (
+				EC5B0C3D1DAC4C6E99690035 /* FirebaseCore */,
+				8721E12A66B89B40E6D2A6ED /* FirebaseAuth */,
+				7FC8E75ADA651E5D34109F56 /* FirebaseFirestore */,
 			);
 			productName = MediReminder;
 			productReference = 19BED17AEB341B00D240C3E2 /* MediReminder.app */;
@@ -315,6 +358,9 @@
 			);
 			mainGroup = 7D4ECFE3F00A1AEE95905E3D;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				83FC930F81F61454B27E4AAF /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */,
+			);
 			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
@@ -354,6 +400,9 @@
 				651D87471ECE575A52A14ABF /* AddMedicineView.swift in Sources */,
 				6F33CA57B35E04EF0A1D0EAC /* AddReminderView.swift in Sources */,
 				0915333F96E8ECE84EDA8433 /* AppDelegate.swift in Sources */,
+				8A29C77663988F676A93DB3F /* AuthGateView.swift in Sources */,
+				7028529044D310153C7B952A /* AuthService.swift in Sources */,
+				86385E226B7C27827D6CDD4C /* AuthenticatedUser.swift in Sources */,
 				8C7271E162567DDEDC2EAFDA /* CalendarView.swift in Sources */,
 				CAA399563553521897AC945E /* Constants.swift in Sources */,
 				54059657BF546AEB610F0440 /* ContentView.swift in Sources */,
@@ -364,6 +413,7 @@
 				64348D96B4E530892DC164FB /* DrugSearchView.swift in Sources */,
 				8CE42035B057444083B4BB63 /* DrugSearchViewModel.swift in Sources */,
 				FB727D2525D814F9BB51B6D8 /* Extensions.swift in Sources */,
+				B4ABB084F8E47680FD5B2484 /* FirebaseBootstrapper.swift in Sources */,
 				D088988BC546CB1AF0634C78 /* MediReminderApp.swift in Sources */,
 				045CCDD24062ED7063B6088B /* Medicine.swift in Sources */,
 				CCD7F882DF1C798FAF4F83A9 /* MedicineDetailView.swift in Sources */,
@@ -378,6 +428,7 @@
 				67F2F8A661EBFC9E8E856FEC /* ReminderListView.swift in Sources */,
 				49B3E67419EE32A784909049 /* ReminderViewModel.swift in Sources */,
 				A7EEFB9A79817F6CDE354C46 /* TimePickerField.swift in Sources */,
+				A4F14BAFAC809D16E509FDCE /* UserSessionStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -620,6 +671,35 @@
 			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		83FC930F81F61454B27E4AAF /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/firebase/firebase-ios-sdk.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 11.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		7FC8E75ADA651E5D34109F56 /* FirebaseFirestore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 83FC930F81F61454B27E4AAF /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseFirestore;
+		};
+		8721E12A66B89B40E6D2A6ED /* FirebaseAuth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 83FC930F81F61454B27E4AAF /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseAuth;
+		};
+		EC5B0C3D1DAC4C6E99690035 /* FirebaseCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 83FC930F81F61454B27E4AAF /* XCRemoteSwiftPackageReference "firebase-ios-sdk" */;
+			productName = FirebaseCore;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 3ECE8F41976F04F8674FF383 /* Project object */;
 }

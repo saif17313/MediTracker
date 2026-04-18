@@ -8,37 +8,54 @@
 import SwiftUI
 import SwiftData
 
-/// Root view of the app containing the main tab navigation.
-/// Provides four tabs: Medicines, History, Drug Search, and Settings.
+/// Root view of the app.
+/// Shows the authentication flow until a user signs in.
 struct ContentView: View {
+    @Environment(UserSessionStore.self) private var session
+
+    var body: some View {
+        Group {
+            switch session.authState {
+            case .loading:
+                ProgressView("Checking account...")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            case .signedOut:
+                AuthGateView()
+
+            case .signedIn:
+                AuthenticatedHomeView()
+            }
+        }
+    }
+}
+
+/// Main signed-in application shell with the tab navigation.
+struct AuthenticatedHomeView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var selectedTab: AppTab = .medicines
     @State private var navigateToMedicineId: UUID?
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            // MARK: - Medicines Tab
             MedicineListView()
                 .tabItem {
                     Label(AppTab.medicines.rawValue, systemImage: AppTab.medicines.iconName)
                 }
                 .tag(AppTab.medicines)
 
-            // MARK: - History Tab
             DoseHistoryView()
                 .tabItem {
                     Label(AppTab.history.rawValue, systemImage: AppTab.history.iconName)
                 }
                 .tag(AppTab.history)
 
-            // MARK: - Drug Search Tab
             DrugSearchView()
                 .tabItem {
                     Label(AppTab.search.rawValue, systemImage: AppTab.search.iconName)
                 }
                 .tag(AppTab.search)
 
-            // MARK: - Settings Tab
             SettingsView()
                 .tabItem {
                     Label(AppTab.settings.rawValue, systemImage: AppTab.settings.iconName)
@@ -47,23 +64,18 @@ struct ContentView: View {
         }
         .tint(.blue)
         .onReceive(NotificationCenter.default.publisher(for: .openMedicineDetail)) { notification in
-            // When user taps a notification, navigate to the medicine
             if let medicineId = notification.userInfo?["medicineId"] as? UUID {
                 navigateToMedicineId = medicineId
                 selectedTab = .medicines
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .doseActionReceived)) { notification in
-            // Handle dose action from notification
             handleDoseAction(from: notification)
         }
         .task {
-            // Request notification permission on first launch
             try? await NotificationService.shared.requestAuthorization()
         }
     }
-
-    // MARK: - Notification Handling
 
     private func handleDoseAction(from notification: Foundation.Notification) {
         guard let medicineIdString = notification.userInfo?["medicineId"] as? UUID,
@@ -72,7 +84,6 @@ struct ContentView: View {
               let scheduledTime = notification.userInfo?["scheduledTime"] as? Date
         else { return }
 
-        // Find the medicine and record the dose
         let descriptor = FetchDescriptor<Medicine>(
             predicate: #Predicate { $0.id == medicineIdString }
         )
@@ -89,17 +100,29 @@ struct ContentView: View {
     }
 }
 
-// MARK: - Settings View
-
-/// Basic settings view with notification and app info
+/// Settings screen for notification and account actions.
 struct SettingsView: View {
+    @Environment(UserSessionStore.self) private var session
+
     @State private var notificationStatus: String = "Checking..."
     @State private var pendingCount: Int = 0
 
     var body: some View {
         NavigationStack {
             List {
-                // MARK: Notifications Section
+                Section("Account") {
+                    HStack {
+                        Label("Signed In", systemImage: "person.crop.circle.fill")
+                        Spacer()
+                        Text(session.currentUserEmail)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Button("Sign Out", role: .destructive) {
+                        session.signOut()
+                    }
+                }
+
                 Section("Notifications") {
                     HStack {
                         Label("Permission", systemImage: "bell.fill")
@@ -125,7 +148,6 @@ struct SettingsView: View {
                     }
                 }
 
-                // MARK: About Section
                 Section("About") {
                     HStack {
                         Label("Version", systemImage: "info.circle")
@@ -149,9 +171,8 @@ struct SettingsView: View {
                     }
                 }
 
-                // MARK: Data Section
                 Section("Data") {
-                    Label("All data is stored locally on your device.", systemImage: "lock.shield.fill")
+                    Label("Authentication now gates the app. Firebase sync comes next in this branch.", systemImage: "person.badge.key.fill")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -177,9 +198,13 @@ struct SettingsView: View {
     }
 }
 
-// MARK: - Preview
-
 #Preview {
     ContentView()
         .modelContainer(PersistenceController.preview.modelContainer)
+        .environment(
+            UserSessionStore(
+                previewUser: AuthenticatedUser(uid: "preview-user", email: "preview@example.com"),
+                modelContext: PersistenceController.preview.modelContainer.mainContext
+            )
+        )
 }
