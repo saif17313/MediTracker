@@ -239,6 +239,7 @@ final class UserSessionStore {
         time: Date,
         frequency: ReminderFrequency,
         daysOfWeek: [Int],
+        customIntervalDays: Int? = nil,
         isEnabled: Bool,
         snoozeDurationMinutes: Int
     ) async throws -> UUID {
@@ -256,6 +257,7 @@ final class UserSessionStore {
             time: time,
             frequency: frequency,
             daysOfWeek: daysOfWeek,
+            customIntervalDays: customIntervalDays,
             isEnabled: isEnabled,
             snoozeDurationMinutes: snoozeDurationMinutes,
             in: modelContext

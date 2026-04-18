@@ -108,6 +108,7 @@ final class ReminderViewModel {
                 time: reminder.time,
                 frequency: reminder.frequency,
                 daysOfWeek: reminder.daysOfWeek,
+                customIntervalDays: reminder.customIntervalDays,
                 isEnabled: shouldEnable,
                 snoozeDurationMinutes: reminder.snoozeDurationMinutes
             )

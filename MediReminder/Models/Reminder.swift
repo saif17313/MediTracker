@@ -17,6 +17,7 @@ final class Reminder {
     var time: Date
     var frequency: ReminderFrequency
     var daysOfWeek: [Int]
+    var customIntervalDays: Int?
     var isEnabled: Bool
     var notificationIdentifier: String
     var snoozeDurationMinutes: Int
@@ -28,6 +29,7 @@ final class Reminder {
         time: Date,
         frequency: ReminderFrequency = .daily,
         daysOfWeek: [Int] = [],
+        customIntervalDays: Int? = nil,
         medicine: Medicine,
         snoozeDurationMinutes: Int = 10
     ) {
@@ -36,6 +38,7 @@ final class Reminder {
         self.time = time
         self.frequency = frequency
         self.daysOfWeek = daysOfWeek
+        self.customIntervalDays = customIntervalDays
         self.isEnabled = true
         self.notificationIdentifier = UUID().uuidString
         self.medicine = medicine
@@ -64,6 +67,10 @@ final class Reminder {
             }
             return "Weekly on \(dayNames.joined(separator: ", ")) at \(formattedTime)"
         case .custom:
+            if let interval = customIntervalDays, interval > 0 {
+                let dayLabel = interval == 1 ? "day" : "days"
+                return "Every \(interval) \(dayLabel) at \(formattedTime)"
+            }
             return "Custom schedule at \(formattedTime)"
         }
     }
