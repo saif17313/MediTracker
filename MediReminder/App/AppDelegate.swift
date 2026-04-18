@@ -10,7 +10,7 @@ import UserNotifications
 import SwiftData
 
 /// Handles notification-related delegate methods.
-/// Manages foreground notification display and user actions (Take / Skip / Snooze).
+/// Manages foreground notification display and user actions (Take / Snooze).
 class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDelegate {
 
     func application(
@@ -36,7 +36,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     }
 
     /// Called when the user interacts with a notification (tap, or action button).
-    /// Handles "Take", "Skip", and "Snooze" actions.
+    /// Handles "Take" and "Snooze" actions.
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse,
@@ -57,9 +57,6 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
         switch actionIdentifier {
         case NotificationConstants.takeAction:
             handleDoseAction(medicineId: medicineId, ownerUserId: ownerUserId, status: .taken)
-
-        case NotificationConstants.skipAction:
-            handleDoseAction(medicineId: medicineId, ownerUserId: ownerUserId, status: .skipped)
 
         case NotificationConstants.snoozeAction:
             handleSnooze(for: response.notification.request)
@@ -84,7 +81,7 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
 
     // MARK: - Private Helpers
 
-    /// Records a dose action (taken/skipped) in the SwiftData store.
+    /// Records a dose action (taken) in the SwiftData store.
     private func handleDoseAction(medicineId: UUID, ownerUserId: String?, status: DoseStatus) {
         // Post notification so the active ViewModel can handle the persistence
         NotificationCenter.default.post(
@@ -121,6 +118,6 @@ extension Notification.Name {
     /// Posted when user taps a notification to open a specific medicine
     static let openMedicineDetail = Notification.Name("openMedicineDetail")
 
-    /// Posted when user takes an action (Take/Skip) from a notification
+    /// Posted when user takes an action (Take) from a notification
     static let doseActionReceived = Notification.Name("doseActionReceived")
 }

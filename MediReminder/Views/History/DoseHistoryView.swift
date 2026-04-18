@@ -90,16 +90,7 @@ struct DoseHistoryView: View {
                                             }
                                             .tint(.green)
                                         }
-                                        if record.status != .skipped {
-                                            Button {
-                                                Task {
-                                                    await vm.updateDoseStatus(record, newStatus: .skipped)
-                                                }
-                                            } label: {
-                                                Label("Skip", systemImage: "forward")
-                                            }
-                                            .tint(.orange)
-                                        }
+
                                     }
                             }
                         } header: {

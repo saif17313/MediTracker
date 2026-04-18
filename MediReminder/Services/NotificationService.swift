@@ -33,17 +33,12 @@ final class NotificationService {
 
     // MARK: - Category Registration
 
-    /// Registers actionable notification categories with Take, Skip, and Snooze buttons.
+    /// Registers actionable notification categories with Take and Snooze buttons.
     func registerCategories() {
         let takeAction = UNNotificationAction(
             identifier: NotificationConstants.takeAction,
             title: "✅ Take",
             options: .foreground
-        )
-        let skipAction = UNNotificationAction(
-            identifier: NotificationConstants.skipAction,
-            title: "⏭ Skip",
-            options: .destructive
         )
         let snoozeAction = UNNotificationAction(
             identifier: NotificationConstants.snoozeAction,
@@ -53,7 +48,7 @@ final class NotificationService {
 
         let doseCategory = UNNotificationCategory(
             identifier: NotificationConstants.doseCategoryIdentifier,
-            actions: [takeAction, skipAction, snoozeAction],
+            actions: [takeAction, snoozeAction],
             intentIdentifiers: [],
             options: [.customDismissAction]
         )

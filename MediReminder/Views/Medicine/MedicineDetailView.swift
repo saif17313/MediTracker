@@ -178,16 +178,6 @@ struct MedicineDetailView: View {
                     recordDose(.taken)
                 }
 
-                // Record Skipped
-                quickActionButton(
-                    title: "Skip",
-                    icon: "forward.fill",
-                    color: .orange,
-                    isDisabled: skipIsDisabled
-                ) {
-                    recordDose(.skipped)
-                }
-
                 // Manage Reminders
                 NavigationLink {
                     ReminderListView(medicine: medicine)
@@ -209,7 +199,7 @@ struct MedicineDetailView: View {
 
             Text(takeNowStatusText)
                 .font(.caption2)
-                .foregroundStyle(skipIsDisabled ? .orange : canTakeNow ? .green : .secondary)
+                .foregroundStyle(canTakeNow ? .green : .secondary)
         }
     }
 
@@ -358,18 +348,9 @@ struct MedicineDetailView: View {
     // MARK: - Helpers
 
     private func recordDose(_ status: DoseStatus) {
-        var scheduledTime = Date.now
-        var notes = ""
-
-        if status == .taken {
-            guard let activeWindow = selectedActiveTakeNowWindow else { return }
-            scheduledTime = activeWindow.occurrenceStart
-            notes = "take_now_reminder:\(activeWindow.reminder.id.uuidString)"
-        } else if status == .skipped, let activeWindow = selectedActiveTakeNowWindow {
-            // Link skip to the active window so Take Now is also disabled after a skip
-            scheduledTime = activeWindow.occurrenceStart
-            notes = "take_now_reminder:\(activeWindow.reminder.id.uuidString)"
-        }
+        guard let activeWindow = selectedActiveTakeNowWindow else { return }
+        let scheduledTime = activeWindow.occurrenceStart
+        let notes = "take_now_reminder:\(activeWindow.reminder.id.uuidString)"
 
         Task {
             do {
@@ -387,20 +368,14 @@ struct MedicineDetailView: View {
     }
 
     private var takeNowStatusText: String {
-        if skipIsDisabled {
-            return "Already taken — Skip is not available for this reminder window."
-        }
-        if !canTakeNow && hasSkippedCurrentWindow {
-            return "Already skipped — Take Now is not available for this reminder window."
-        }
         if canTakeNow {
             if let activeWindow = selectedActiveTakeNowWindow {
                 let end = activeWindow.windowEnd.fullString
-                return "Take Now is active for this reminder until \(end)."
+                return "Take Now is active until \(end). If missed, it will be marked as skipped."
             }
             return "Take Now is active for an available reminder window."
         }
-        return "Take Now is enabled only during each reminder's configured time window and can be used once per reminder occurrence."
+        return "Take Now is available during each reminder's time window. Missed windows are automatically marked as skipped."
     }
 
     private var canTakeNow: Bool {
