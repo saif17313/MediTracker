@@ -11,11 +11,13 @@
 		045CCDD24062ED7063B6088B /* Medicine.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE8709EBF31233D0B7C9A4E5 /* Medicine.swift */; };
 		0915333F96E8ECE84EDA8433 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = DBAE1CDD7C18E89E24C2D4FF /* AppDelegate.swift */; };
 		15C7D37A7BC25F7ED4F24B0D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 18E1667F1E82617EC2779CA4 /* Assets.xcassets */; };
+		16AFF658E6A4E937962FDDC5 /* PrescriptionScanService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6CBC0947FDBEAA4B8919DAF8 /* PrescriptionScanService.swift */; };
 		2118471371F396914896935D /* ViewModelTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4591254037AC78E779F7CAEC /* ViewModelTests.swift */; };
 		21239F2D4F704C71D5AB1C28 /* MedicineDetailViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 760C7684C834B1E4F86314A3 /* MedicineDetailViewModel.swift */; };
 		372778440604EDC1EE375B6C /* FirebaseCore in Frameworks */ = {isa = PBXBuildFile; productRef = EC5B0C3D1DAC4C6E99690035 /* FirebaseCore */; };
 		49B3E67419EE32A784909049 /* ReminderViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38EFCF294AF35EC4E9F80AC4 /* ReminderViewModel.swift */; };
 		4D4B23EE6BB35B4CD1417549 /* Reminder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7DEEE759A27D6FC4258AA06 /* Reminder.swift */; };
+		505678AF504A411C75FBA048 /* ExtractedMedicineReviewView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D12B5BC733672C335773375D /* ExtractedMedicineReviewView.swift */; };
 		54059657BF546AEB610F0440 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A68CFCD6214092FD41F06BC /* ContentView.swift */; };
 		5844DBD1B865583A2E726B7E /* MedicineRowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83140821E5E52343DF597077 /* MedicineRowView.swift */; };
 		5B26AFCD43373F3FE55B758E /* MedicineListViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80781B8B8CAB9AF25CEA1C0B /* MedicineListViewModel.swift */; };
@@ -28,6 +30,7 @@
 		7658634E38F55DF98BED01CA /* DoseHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76F8E2944AAD47C5FF1D077C /* DoseHistoryView.swift */; };
 		77DDD9B3539A9528E28C7208 /* UserDataSyncService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 62470AA367F9D627D0FD6E53 /* UserDataSyncService.swift */; };
 		86385E226B7C27827D6CDD4C /* AuthenticatedUser.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5B4FF1751FDFC58EEA231CF3 /* AuthenticatedUser.swift */; };
+		86E900A8645A8157B107E71F /* PrescriptionScanView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4762CEDD94E679E0EDE440A7 /* PrescriptionScanView.swift */; };
 		8A29C77663988F676A93DB3F /* AuthGateView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A12D589AA7B2801D5B4D4BC /* AuthGateView.swift */; };
 		8C7271E162567DDEDC2EAFDA /* CalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6D79B7CB3FBEACB987E6CF7 /* CalendarView.swift */; };
 		8CE42035B057444083B4BB63 /* DrugSearchViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0EBC1CAFBA85E96B05B3F351 /* DrugSearchViewModel.swift */; };
@@ -47,6 +50,7 @@
 		E46DA2A87D6DFD96C6959BA8 /* NotificationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = C9176415C7B9076B14DA9F9A /* NotificationService.swift */; };
 		E9C6F854F58E7D0A420DED83 /* OpenFDAServiceTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = CAC0C05A215F9285D39A4DF2 /* OpenFDAServiceTests.swift */; };
 		F83AE1DFBF97D9FE2707BC93 /* OpenFDAService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 136D548D07004CECD0B0EE15 /* OpenFDAService.swift */; };
+		FB4E341102A2E046FCB26365 /* PrescriptionScanViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = CA42DA9B846C60ABABAAD825 /* PrescriptionScanViewModel.swift */; };
 		FB727D2525D814F9BB51B6D8 /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8E6F9621C90501CEFD63C2BD /* Extensions.swift */; };
 		FC8C1BBEFA503686DE70DD10 /* DeviceIdentityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49B0FDB101211C55900C6A1C /* DeviceIdentityService.swift */; };
 /* End PBXBuildFile section */
@@ -76,6 +80,7 @@
 		3AADF7A30CF0F39834C68310 /* AuthService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthService.swift; sourceTree = "<group>"; };
 		403E964948076548E800AFEE /* FirebaseBootstrapper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FirebaseBootstrapper.swift; sourceTree = "<group>"; };
 		4591254037AC78E779F7CAEC /* ViewModelTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModelTests.swift; sourceTree = "<group>"; };
+		4762CEDD94E679E0EDE440A7 /* PrescriptionScanView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrescriptionScanView.swift; sourceTree = "<group>"; };
 		4877C553A78217CCC407707F /* UserSessionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSessionStore.swift; sourceTree = "<group>"; };
 		49B0FDB101211C55900C6A1C /* DeviceIdentityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeviceIdentityService.swift; sourceTree = "<group>"; };
 		53092E8175B9165860ADA188 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -83,6 +88,7 @@
 		5B95CA23A497EC24A848D300 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
 		5FF3A53137F454A5B428F6AD /* MedicineListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicineListView.swift; sourceTree = "<group>"; };
 		62470AA367F9D627D0FD6E53 /* UserDataSyncService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserDataSyncService.swift; sourceTree = "<group>"; };
+		6CBC0947FDBEAA4B8919DAF8 /* PrescriptionScanService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrescriptionScanService.swift; sourceTree = "<group>"; };
 		6E4D596CDA8D0C6510DB0756 /* DoseBadge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseBadge.swift; sourceTree = "<group>"; };
 		760C7684C834B1E4F86314A3 /* MedicineDetailViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicineDetailViewModel.swift; sourceTree = "<group>"; };
 		76F8E2944AAD47C5FF1D077C /* DoseHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseHistoryView.swift; sourceTree = "<group>"; };
@@ -96,7 +102,9 @@
 		A9D3B01CBCE53A6239264B1D /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		AC15055E6771D801102EC9C9 /* DoseHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DoseHistory.swift; sourceTree = "<group>"; };
 		C9176415C7B9076B14DA9F9A /* NotificationService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NotificationService.swift; sourceTree = "<group>"; };
+		CA42DA9B846C60ABABAAD825 /* PrescriptionScanViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrescriptionScanViewModel.swift; sourceTree = "<group>"; };
 		CAC0C05A215F9285D39A4DF2 /* OpenFDAServiceTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenFDAServiceTests.swift; sourceTree = "<group>"; };
+		D12B5BC733672C335773375D /* ExtractedMedicineReviewView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExtractedMedicineReviewView.swift; sourceTree = "<group>"; };
 		DBAE1CDD7C18E89E24C2D4FF /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		E14AF205D4B87B0E67F1C642 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		ED11FCA83101069EFACE80DB /* MedicineDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MedicineDetailView.swift; sourceTree = "<group>"; };
@@ -186,10 +194,20 @@
 				C9176415C7B9076B14DA9F9A /* NotificationService.swift */,
 				136D548D07004CECD0B0EE15 /* OpenFDAService.swift */,
 				5B95CA23A497EC24A848D300 /* PersistenceController.swift */,
+				6CBC0947FDBEAA4B8919DAF8 /* PrescriptionScanService.swift */,
 				62470AA367F9D627D0FD6E53 /* UserDataSyncService.swift */,
 				4877C553A78217CCC407707F /* UserSessionStore.swift */,
 			);
 			path = Services;
+			sourceTree = "<group>";
+		};
+		8E6A6407BBEE9667D07DA9B5 /* Prescription */ = {
+			isa = PBXGroup;
+			children = (
+				D12B5BC733672C335773375D /* ExtractedMedicineReviewView.swift */,
+				4762CEDD94E679E0EDE440A7 /* PrescriptionScanView.swift */,
+			);
+			path = Prescription;
 			sourceTree = "<group>";
 		};
 		9029CE389F8E6DC7F5D47D0B /* Medicine */ = {
@@ -260,6 +278,7 @@
 				2413733C4609AEA1C9FCDA2C /* Components */,
 				A686E9E814ECF8A80899C2DC /* History */,
 				9029CE389F8E6DC7F5D47D0B /* Medicine */,
+				8E6A6407BBEE9667D07DA9B5 /* Prescription */,
 				7A300868FE0FFDFFA47770E7 /* Reminder */,
 				E1EDE3AA15BCD32899762514 /* Search */,
 				2A68CFCD6214092FD41F06BC /* ContentView.swift */,
@@ -291,6 +310,7 @@
 				0EBC1CAFBA85E96B05B3F351 /* DrugSearchViewModel.swift */,
 				760C7684C834B1E4F86314A3 /* MedicineDetailViewModel.swift */,
 				80781B8B8CAB9AF25CEA1C0B /* MedicineListViewModel.swift */,
+				CA42DA9B846C60ABABAAD825 /* PrescriptionScanViewModel.swift */,
 				38EFCF294AF35EC4E9F80AC4 /* ReminderViewModel.swift */,
 			);
 			path = ViewModels;
@@ -424,6 +444,7 @@
 				64348D96B4E530892DC164FB /* DrugSearchView.swift in Sources */,
 				8CE42035B057444083B4BB63 /* DrugSearchViewModel.swift in Sources */,
 				FB727D2525D814F9BB51B6D8 /* Extensions.swift in Sources */,
+				505678AF504A411C75FBA048 /* ExtractedMedicineReviewView.swift in Sources */,
 				B4ABB084F8E47680FD5B2484 /* FirebaseBootstrapper.swift in Sources */,
 				D088988BC546CB1AF0634C78 /* MediReminderApp.swift in Sources */,
 				045CCDD24062ED7063B6088B /* Medicine.swift in Sources */,
@@ -435,6 +456,9 @@
 				E46DA2A87D6DFD96C6959BA8 /* NotificationService.swift in Sources */,
 				F83AE1DFBF97D9FE2707BC93 /* OpenFDAService.swift in Sources */,
 				63007D81AF801913AC290039 /* PersistenceController.swift in Sources */,
+				16AFF658E6A4E937962FDDC5 /* PrescriptionScanService.swift in Sources */,
+				86E900A8645A8157B107E71F /* PrescriptionScanView.swift in Sources */,
+				FB4E341102A2E046FCB26365 /* PrescriptionScanViewModel.swift in Sources */,
 				4D4B23EE6BB35B4CD1417549 /* Reminder.swift in Sources */,
 				67F2F8A661EBFC9E8E856FEC /* ReminderListView.swift in Sources */,
 				49B3E67419EE32A784909049 /* ReminderViewModel.swift in Sources */,
