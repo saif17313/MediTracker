@@ -112,25 +112,26 @@ final class PrescriptionScanViewModel {
 
     // MARK: - Saving
 
-    /// Saves all selected candidates as Medicine records in SwiftData.
-    /// - Parameter modelContext: The SwiftData model context to insert into.
-    func saveSelected(modelContext: ModelContext) {
+    /// Saves all selected candidates as Medicine records via UserSessionStore,
+    /// which handles both local SwiftData persistence and Firebase sync.
+    /// - Parameter session: The app's UserSessionStore instance.
+    func saveSelected(session: UserSessionStore) async {
         let selected = candidates.filter(\.isSelected)
         guard !selected.isEmpty else { return }
 
         state = .saving
 
-        for candidate in selected {
-            let medicine = Medicine(
-                name: candidate.name,
-                dosage: candidate.dosage,
-                form: candidate.form
-            )
-            modelContext.insert(medicine)
-        }
-
         do {
-            try modelContext.save()
+            for candidate in selected {
+                try await session.saveMedicine(
+                    name: candidate.name,
+                    dosage: candidate.dosage,
+                    form: candidate.form,
+                    instructions: "",
+                    startDate: .now,
+                    endDate: nil
+                )
+            }
             state = .done(count: selected.count)
         } catch {
             state = .error("Failed to save medicines: \(error.localizedDescription)")

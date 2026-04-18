@@ -12,7 +12,7 @@ import SwiftData
 /// Displays detected medicine candidates with editable fields and checkboxes.
 /// User confirms selections before medicines are created in SwiftData.
 struct ExtractedMedicineReviewView: View {
-    @Environment(\.modelContext) private var modelContext
+    @Environment(UserSessionStore.self) private var session
     @Environment(\.dismiss) private var dismiss
     @Bindable var viewModel: PrescriptionScanViewModel
 
@@ -41,13 +41,15 @@ struct ExtractedMedicineReviewView: View {
                 if !viewModel.candidates.isEmpty {
                     ToolbarItem(placement: .confirmationAction) {
                         Button {
-                            viewModel.saveSelected(modelContext: modelContext)
-                            dismiss()
+                            Task {
+                                await viewModel.saveSelected(session: session)
+                                dismiss()
+                            }
                         } label: {
                             Text("Add \(viewModel.selectedCount)")
                                 .fontWeight(.semibold)
                         }
-                        .disabled(viewModel.selectedCount == 0)
+                        .disabled(viewModel.selectedCount == 0 || viewModel.state == .saving)
                     }
                 }
             }
