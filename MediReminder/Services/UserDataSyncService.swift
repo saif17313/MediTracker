@@ -23,6 +23,19 @@ struct UserProfileDocument: Codable {
     let lastLoginAt: Date
 }
 
+/// Firestore representation of a signed-in device for a user.
+struct DeviceDocument: Codable {
+    let id: String
+    let ownerUserId: String
+    let deviceName: String
+    let platform: String
+    let systemVersion: String
+    let notificationsAuthorized: Bool
+    let isSignedIn: Bool
+    let lastSeenAt: Date
+    let lastSignedOutAt: Date?
+}
+
 /// Firestore representation of a medicine.
 struct MedicineDocument: Codable {
     let id: String
@@ -84,6 +97,48 @@ final class UserDataSyncService {
         try await ensureUserProfile(for: user)
         let snapshot = try await fetchSnapshot(for: user.uid)
         return try apply(snapshot: snapshot, for: user.uid, in: context)
+    }
+
+    func registerDevice(
+        for user: AuthenticatedUser,
+        device: RegisteredDevice,
+        notificationsAuthorized: Bool
+    ) async throws {
+        let document = DeviceDocument(
+            id: device.installationId,
+            ownerUserId: user.uid,
+            deviceName: device.name,
+            platform: device.platform,
+            systemVersion: device.systemVersion,
+            notificationsAuthorized: notificationsAuthorized,
+            isSignedIn: true,
+            lastSeenAt: .now,
+            lastSignedOutAt: nil
+        )
+
+        try await deviceDocument(for: user.uid, installationId: device.installationId)
+            .setDataAsync(from: document)
+    }
+
+    func markDeviceSignedOut(
+        for user: AuthenticatedUser,
+        device: RegisteredDevice,
+        notificationsAuthorized: Bool
+    ) async throws {
+        let document = DeviceDocument(
+            id: device.installationId,
+            ownerUserId: user.uid,
+            deviceName: device.name,
+            platform: device.platform,
+            systemVersion: device.systemVersion,
+            notificationsAuthorized: notificationsAuthorized,
+            isSignedIn: false,
+            lastSeenAt: .now,
+            lastSignedOutAt: .now
+        )
+
+        try await deviceDocument(for: user.uid, installationId: device.installationId)
+            .setDataAsync(from: document)
     }
 
     @discardableResult
@@ -459,6 +514,10 @@ final class UserDataSyncService {
         userDocument(for: userId).collection("doseHistory")
     }
 
+    private func devicesCollection(for userId: String) -> CollectionReference {
+        userDocument(for: userId).collection("devices")
+    }
+
     private func medicineDocument(for userId: String, medicineId: String) -> DocumentReference {
         medicinesCollection(for: userId).document(medicineId)
     }
@@ -469,6 +528,10 @@ final class UserDataSyncService {
 
     private func doseHistoryDocument(for userId: String, recordId: String) -> DocumentReference {
         doseHistoryCollection(for: userId).document(recordId)
+    }
+
+    private func deviceDocument(for userId: String, installationId: String) -> DocumentReference {
+        devicesCollection(for: userId).document(installationId)
     }
 }
 

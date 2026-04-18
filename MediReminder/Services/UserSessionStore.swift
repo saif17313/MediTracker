@@ -16,6 +16,7 @@ final class UserSessionStore {
     private let modelContext: ModelContext
     private let authService: AuthService?
     private let dataSyncService: UserDataSyncService
+    private let deviceIdentityService: DeviceIdentityService
 
     private(set) var firebaseConfigurationState: FirebaseConfigurationState
     private(set) var authState: AuthSessionState = .loading
@@ -28,11 +29,13 @@ final class UserSessionStore {
         modelContext: ModelContext,
         authService: AuthService? = AuthService(),
         dataSyncService: UserDataSyncService = UserDataSyncService(),
+        deviceIdentityService: DeviceIdentityService = .shared,
         firebaseConfigurationState: FirebaseConfigurationState
     ) {
         self.modelContext = modelContext
         self.authService = authService
         self.dataSyncService = dataSyncService
+        self.deviceIdentityService = deviceIdentityService
         self.firebaseConfigurationState = firebaseConfigurationState
 
         if firebaseConfigurationState.isConfigured {
@@ -47,6 +50,7 @@ final class UserSessionStore {
             modelContext: modelContext,
             authService: nil,
             dataSyncService: UserDataSyncService(),
+            deviceIdentityService: .shared,
             firebaseConfigurationState: .configured
         )
         if let previewUser {
@@ -70,6 +74,14 @@ final class UserSessionStore {
 
     var isAuthenticated: Bool {
         currentUser != nil
+    }
+
+    var currentDevice: RegisteredDevice {
+        deviceIdentityService.currentDevice
+    }
+
+    var currentDeviceIdentifierShort: String {
+        String(currentDevice.installationId.prefix(8))
     }
 
     func signIn(email: String, password: String) async {
@@ -125,11 +137,15 @@ final class UserSessionStore {
         isWorking = false
     }
 
-    func signOut() {
+    func signOut() async {
         guard let authService else { return }
 
         errorMessage = nil
         infoMessage = nil
+
+        if let currentUser {
+            await markCurrentDeviceSignedOut(for: currentUser)
+        }
 
         do {
             try authService.signOut()
@@ -155,6 +171,7 @@ final class UserSessionStore {
         do {
             let medicines = try await dataSyncService.refreshData(for: user, in: modelContext)
             NotificationService.shared.refreshAllReminders(medicines: medicines)
+            await registerCurrentDevice(for: user)
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -366,6 +383,32 @@ final class UserSessionStore {
             sortBy: [SortDescriptor(\.name, order: .forward)]
         )
         return (try? modelContext.fetch(descriptor)) ?? []
+    }
+
+    private func registerCurrentDevice(for user: AuthenticatedUser) async {
+        let notificationStatus = await NotificationService.shared.checkAuthorizationStatus()
+        do {
+            try await dataSyncService.registerDevice(
+                for: user,
+                device: currentDevice,
+                notificationsAuthorized: notificationStatus == .authorized
+            )
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    private func markCurrentDeviceSignedOut(for user: AuthenticatedUser) async {
+        let notificationStatus = await NotificationService.shared.checkAuthorizationStatus()
+        do {
+            try await dataSyncService.markDeviceSignedOut(
+                for: user,
+                device: currentDevice,
+                notificationsAuthorized: notificationStatus == .authorized
+            )
+        } catch {
+            errorMessage = error.localizedDescription
+        }
     }
 
 }

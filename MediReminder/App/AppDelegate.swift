@@ -50,14 +50,16 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
             return
         }
 
+        let ownerUserId = userInfo["ownerUserId"] as? String
+
         let actionIdentifier = response.actionIdentifier
 
         switch actionIdentifier {
         case NotificationConstants.takeAction:
-            handleDoseAction(medicineId: medicineId, status: .taken)
+            handleDoseAction(medicineId: medicineId, ownerUserId: ownerUserId, status: .taken)
 
         case NotificationConstants.skipAction:
-            handleDoseAction(medicineId: medicineId, status: .skipped)
+            handleDoseAction(medicineId: medicineId, ownerUserId: ownerUserId, status: .skipped)
 
         case NotificationConstants.snoozeAction:
             handleSnooze(for: response.notification.request)
@@ -67,7 +69,10 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
             NotificationCenter.default.post(
                 name: .openMedicineDetail,
                 object: nil,
-                userInfo: ["medicineId": medicineId]
+                userInfo: [
+                    "medicineId": medicineId,
+                    "ownerUserId": ownerUserId as Any
+                ]
             )
 
         default:
@@ -80,13 +85,14 @@ class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCenterDele
     // MARK: - Private Helpers
 
     /// Records a dose action (taken/skipped) in the SwiftData store.
-    private func handleDoseAction(medicineId: UUID, status: DoseStatus) {
+    private func handleDoseAction(medicineId: UUID, ownerUserId: String?, status: DoseStatus) {
         // Post notification so the active ViewModel can handle the persistence
         NotificationCenter.default.post(
             name: .doseActionReceived,
             object: nil,
             userInfo: [
                 "medicineId": medicineId,
+                "ownerUserId": ownerUserId as Any,
                 "status": status.rawValue,
                 "scheduledTime": Date.now
             ]

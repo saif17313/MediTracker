@@ -65,7 +65,9 @@ struct AuthenticatedHomeView: View {
         }
         .tint(.blue)
         .onReceive(NotificationCenter.default.publisher(for: .openMedicineDetail)) { notification in
-            if let medicineId = notification.userInfo?["medicineId"] as? UUID {
+            if let medicineId = notification.userInfo?["medicineId"] as? UUID,
+               let ownerUserId = notification.userInfo?["ownerUserId"] as? String,
+               ownerUserId == session.currentUser?.uid {
                 navigateToMedicineId = medicineId
                 selectedTab = .medicines
             }
@@ -76,14 +78,26 @@ struct AuthenticatedHomeView: View {
         .task {
             try? await NotificationService.shared.requestAuthorization()
         }
+        .overlay(alignment: .top) {
+            if session.isSyncingCloudData {
+                ProgressView("Syncing your account data...")
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+                    .background(.ultraThinMaterial, in: Capsule())
+                    .padding(.top, 8)
+            }
+        }
     }
 
     private func handleDoseAction(from notification: Foundation.Notification) {
         guard let medicineIdString = notification.userInfo?["medicineId"] as? UUID,
+              let ownerUserId = notification.userInfo?["ownerUserId"] as? String,
               let statusString = notification.userInfo?["status"] as? String,
               let status = DoseStatus(rawValue: statusString),
               let scheduledTime = notification.userInfo?["scheduledTime"] as? Date
         else { return }
+
+        guard ownerUserId == session.currentUser?.uid else { return }
 
         let descriptor = FetchDescriptor<Medicine>(
             predicate: #Predicate { $0.id == medicineIdString }
@@ -124,8 +138,45 @@ struct SettingsView: View {
                     }
 
                     Button("Sign Out", role: .destructive) {
-                        session.signOut()
+                        Task {
+                            await session.signOut()
+                        }
                     }
+                }
+
+                Section("This Device") {
+                    HStack {
+                        Label("Device Name", systemImage: "iphone")
+                        Spacer()
+                        Text(session.currentDevice.name)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    HStack {
+                        Label("Installation ID", systemImage: "number")
+                        Spacer()
+                        Text(session.currentDeviceIdentifierShort)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Section("Cloud Sync") {
+                    HStack {
+                        Label("Status", systemImage: "arrow.triangle.2.circlepath")
+                        Spacer()
+                        Text(session.isSyncingCloudData ? "Syncing" : "Up to date")
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Button {
+                        Task {
+                            await session.refreshCurrentUserData()
+                            await checkStatus()
+                        }
+                    } label: {
+                        Label("Sync Now", systemImage: "icloud.and.arrow.down")
+                    }
+                    .disabled(session.isSyncingCloudData)
                 }
 
                 Section("Notifications") {
@@ -146,6 +197,7 @@ struct SettingsView: View {
                     Button {
                         Task {
                             try? await NotificationService.shared.requestAuthorization()
+                            await session.refreshCurrentUserData()
                             await checkStatus()
                         }
                     } label: {
@@ -177,7 +229,7 @@ struct SettingsView: View {
                 }
 
                 Section("Data") {
-                    Label("Authentication now gates the app. Firebase sync comes next in this branch.", systemImage: "person.badge.key.fill")
+                    Label("Medicines, reminders, and history are now scoped to the signed-in Firebase user and rescheduled on this device.", systemImage: "person.badge.key.fill")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }

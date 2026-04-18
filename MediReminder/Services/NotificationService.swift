@@ -142,7 +142,9 @@ final class NotificationService {
         content.categoryIdentifier = NotificationConstants.doseCategoryIdentifier
         content.userInfo = [
             "medicineId": medicine.id.uuidString,
-            "reminderId": reminder.id.uuidString
+            "reminderId": reminder.id.uuidString,
+            "ownerUserId": medicine.ownerUserId,
+            "deviceInstallationId": DeviceIdentityService.shared.currentDevice.installationId
         ]
         return content
     }
