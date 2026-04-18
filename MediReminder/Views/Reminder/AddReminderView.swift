@@ -66,6 +66,19 @@ struct AddReminderView: View {
                     }
                 }
 
+                if viewModel.selectedFrequency == .custom {
+                    Section("Custom Interval") {
+                        Stepper(value: $viewModel.selectedCustomIntervalDays, in: 1...30) {
+                            let interval = viewModel.selectedCustomIntervalDays
+                            Text(interval == 1 ? "Every 1 day" : "Every \(interval) days")
+                        }
+
+                        Text("Choose how many days to wait between reminders.")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
                 // MARK: - Snooze Duration
                 Section("Snooze") {
                     Picker("Snooze Duration", selection: $viewModel.snoozeDuration) {
@@ -74,6 +87,17 @@ struct AddReminderView: View {
                         Text("15 minutes").tag(15)
                         Text("30 minutes").tag(30)
                     }
+                }
+
+                // MARK: - Take Now Activation Window
+                Section("Medicine Taking Time") {
+                    Stepper(value: $viewModel.selectedTakeNowWindowHours, in: 1...24) {
+                        let hours = viewModel.selectedTakeNowWindowHours
+                        Text(hours == 1 ? "Take Now active for 1 hour" : "Take Now active for \(hours) hours")
+                    }
+                    Text("After reminder time starts, Take Now will remain active for this duration.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
 
                 // MARK: - Summary
@@ -87,6 +111,9 @@ struct AddReminderView: View {
                                 .fontWeight(.medium)
                             Text(summaryText)
                                 .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Text(takeNowSummaryText)
+                                .font(.caption2)
                                 .foregroundStyle(.secondary)
                         }
                     }
@@ -103,11 +130,15 @@ struct AddReminderView: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Add") {
-                        viewModel.addReminder()
-                        dismiss()
+                        Task {
+                            await viewModel.addReminder()
+                            if viewModel.errorMessage == nil {
+                                dismiss()
+                            }
+                        }
                     }
                     .fontWeight(.semibold)
-                    .disabled(!isFormValid)
+                    .disabled(!isFormValid || viewModel.isLoading)
                 }
             }
         }
@@ -142,6 +173,9 @@ struct AddReminderView: View {
         if viewModel.selectedFrequency == .weekly && viewModel.selectedDaysOfWeek.isEmpty {
             return false
         }
+        if viewModel.selectedFrequency == .custom && viewModel.selectedCustomIntervalDays < 1 {
+            return false
+        }
         return true
     }
 
@@ -156,7 +190,7 @@ struct AddReminderView: View {
         case .daily:
             return "Every day at \(timeStr)"
         case .everyOtherDay:
-            return "Every other day at \(timeStr)"
+            return "Every 15 days at \(timeStr)"
         case .weekly:
             let dayNames = viewModel.selectedDaysOfWeek.sorted().compactMap { day -> String? in
                 guard day >= 1, day <= 7 else { return nil }
@@ -164,8 +198,17 @@ struct AddReminderView: View {
             }
             return "Every \(dayNames.joined(separator: ", ")) at \(timeStr)"
         case .custom:
-            return "Custom schedule at \(timeStr)"
+            let interval = viewModel.selectedCustomIntervalDays
+            let dayLabel = interval == 1 ? "day" : "days"
+            return "Every \(interval) \(dayLabel) at \(timeStr)"
         }
+    }
+
+    private var takeNowSummaryText: String {
+        let hours = viewModel.selectedTakeNowWindowHours
+        return hours == 1
+            ? "Take Now will be available for 1 hour after each reminder starts."
+            : "Take Now will be available for \(hours) hours after each reminder starts."
     }
 }
 
@@ -174,8 +217,16 @@ struct AddReminderView: View {
 #Preview {
     AddReminderView(
         viewModel: ReminderViewModel(
-            medicine: Medicine(name: "Aspirin", dosage: "500mg", form: .tablet),
-            modelContext: PersistenceController.preview.modelContainer.mainContext
+            medicine: Medicine(
+                name: "Aspirin",
+                dosage: "500mg",
+                form: .tablet,
+                ownerUserId: AppConstants.previewUserId
+            ),
+            session: UserSessionStore(
+                previewUser: AuthenticatedUser(uid: AppConstants.previewUserId, email: "preview@example.com"),
+                modelContext: PersistenceController.preview.modelContainer.mainContext
+            )
         )
     )
 }

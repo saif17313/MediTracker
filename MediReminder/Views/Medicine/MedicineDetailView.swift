@@ -11,8 +11,8 @@ import SwiftData
 /// Displays detailed information for a single medicine.
 /// Shows medicine info, reminders list, recent dose history, and quick actions.
 struct MedicineDetailView: View {
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(UserSessionStore.self) private var session
 
     let medicine: Medicine
 
@@ -69,10 +69,14 @@ struct MedicineDetailView: View {
         .alert("Delete Medicine", isPresented: $showingDeleteAlert) {
             Button("Cancel", role: .cancel) {}
             Button("Delete", role: .destructive) {
-                NotificationService.shared.cancelAllReminders(for: medicine)
-                modelContext.delete(medicine)
-                try? modelContext.save()
-                dismiss()
+                Task {
+                    do {
+                        try await session.deleteMedicine(medicine)
+                        dismiss()
+                    } catch {
+                        print("Failed to delete medicine: \(error.localizedDescription)")
+                    }
+                }
             }
         } message: {
             Text("This will permanently delete \(medicine.name) and all its reminders and history. This cannot be undone.")
@@ -162,42 +166,48 @@ struct MedicineDetailView: View {
     // MARK: - Quick Actions
 
     private var quickActionsSection: some View {
-        HStack(spacing: 12) {
-            // Record Taken
-            quickActionButton(
-                title: "Take Now",
-                icon: "checkmark.circle.fill",
-                color: .green
-            ) {
-                recordDose(.taken)
-            }
-
-            // Record Skipped
-            quickActionButton(
-                title: "Skip",
-                icon: "forward.fill",
-                color: .orange
-            ) {
-                recordDose(.skipped)
-            }
-
-            // Manage Reminders
-            NavigationLink {
-                ReminderListView(medicine: medicine)
-            } label: {
-                VStack(spacing: 6) {
-                    Image(systemName: "bell.fill")
-                        .font(.title2)
-                        .foregroundStyle(.blue)
-                    Text("Reminders")
-                        .font(.caption)
-                        .foregroundStyle(.primary)
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 12) {
+                // Record Taken
+                quickActionButton(
+                    title: "Take Now",
+                    icon: "checkmark.circle.fill",
+                    color: .green
+                ) {
+                    recordDose(.taken)
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
-                .background(Color.blue.opacity(0.1))
-                .clipShape(RoundedRectangle(cornerRadius: 10))
+
+                // Record Skipped
+                quickActionButton(
+                    title: "Skip",
+                    icon: "forward.fill",
+                    color: .orange
+                ) {
+                    recordDose(.skipped)
+                }
+
+                // Manage Reminders
+                NavigationLink {
+                    ReminderListView(medicine: medicine)
+                } label: {
+                    VStack(spacing: 6) {
+                        Image(systemName: "bell.fill")
+                            .font(.title2)
+                            .foregroundStyle(.blue)
+                        Text("Reminders")
+                            .font(.caption)
+                            .foregroundStyle(.primary)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(Color.blue.opacity(0.1))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                }
             }
+
+            Text(takeNowStatusText)
+                .font(.caption2)
+                .foregroundStyle(canTakeNow ? .green : .secondary)
         }
     }
 
@@ -216,6 +226,8 @@ struct MedicineDetailView: View {
             .background(color.opacity(0.1))
             .clipShape(RoundedRectangle(cornerRadius: 10))
         }
+        .disabled(title == "Take Now" && !canTakeNow)
+        .opacity(title == "Take Now" && !canTakeNow ? 0.45 : 1.0)
     }
 
     // MARK: - Reminders Section
@@ -344,22 +356,175 @@ struct MedicineDetailView: View {
     // MARK: - Helpers
 
     private func recordDose(_ status: DoseStatus) {
-        let record = DoseHistory(
-            status: status,
-            scheduledTime: .now,
-            actionTime: .now,
-            medicine: medicine
-        )
-        modelContext.insert(record)
-        try? modelContext.save()
+        var scheduledTime = Date.now
+        var notes = ""
+
+        if status == .taken {
+            guard let activeWindow = selectedActiveTakeNowWindow else { return }
+            scheduledTime = activeWindow.occurrenceStart
+            notes = "take_now_reminder:\(activeWindow.reminder.id.uuidString)"
+        }
+
+        Task {
+            do {
+                _ = try await session.recordDose(
+                    medicine: medicine,
+                    status: status,
+                    scheduledTime: scheduledTime,
+                    actionTime: .now,
+                    notes: notes
+                )
+            } catch {
+                print("Failed to record dose: \(error.localizedDescription)")
+            }
+        }
+    }
+
+    private var takeNowStatusText: String {
+        if canTakeNow {
+            if let activeWindow = selectedActiveTakeNowWindow {
+                let end = activeWindow.windowEnd.fullString
+                return "Take Now is active for this reminder until \(end)."
+            }
+            return "Take Now is active for an available reminder window."
+        }
+        return "Take Now is enabled only during each reminder's configured time window and can be used once per reminder occurrence."
+    }
+
+    private var canTakeNow: Bool {
+        selectedActiveTakeNowWindow != nil
+    }
+
+    private var selectedActiveTakeNowWindow: ActiveReminderWindow? {
+        activeTakeNowWindows.sorted { $0.windowEnd < $1.windowEnd }.first
+    }
+
+    private var activeTakeNowWindows: [ActiveReminderWindow] {
+        let now = Date.now
+        return medicine.reminders
+            .filter { $0.isEnabled }
+            .compactMap { reminder in
+                guard let occurrenceStart = mostRecentOccurrenceStart(for: reminder, now: now) else {
+                    return nil
+                }
+
+                let windowHours = max(reminder.takeNowWindowHours, 1)
+                guard let windowEnd = Calendar.current.date(byAdding: .hour, value: windowHours, to: occurrenceStart) else {
+                    return nil
+                }
+
+                guard now >= occurrenceStart, now <= windowEnd else {
+                    return nil
+                }
+
+                guard !hasTakenRecord(for: reminder, occurrenceStart: occurrenceStart) else {
+                    return nil
+                }
+
+                return ActiveReminderWindow(reminder: reminder, occurrenceStart: occurrenceStart, windowEnd: windowEnd)
+            }
+    }
+
+    private func hasTakenRecord(for reminder: Reminder, occurrenceStart: Date) -> Bool {
+        let marker = "take_now_reminder:\(reminder.id.uuidString)"
+        return medicine.doseHistory.contains { record in
+            guard record.status == .taken else { return false }
+            guard record.notes.contains(marker) else { return false }
+            return abs(record.scheduledTime.timeIntervalSince(occurrenceStart)) < 60
+        }
+    }
+
+    private func mostRecentOccurrenceStart(for reminder: Reminder, now: Date) -> Date? {
+        switch reminder.frequency {
+        case .daily:
+            return mostRecentDailyOccurrence(reminder: reminder, now: now)
+        case .everyOtherDay:
+            return mostRecentIntervalOccurrence(reminder: reminder, now: now, intervalDays: 15)
+        case .weekly:
+            return mostRecentWeeklyOccurrence(reminder: reminder, now: now)
+        case .custom:
+            return mostRecentIntervalOccurrence(reminder: reminder, now: now, intervalDays: max(reminder.customIntervalDays ?? 1, 1))
+        }
+    }
+
+    private func mostRecentDailyOccurrence(reminder: Reminder, now: Date) -> Date? {
+        let calendar = Calendar.current
+        guard let todayCandidate = reminderTime(on: now, reminder: reminder) else { return nil }
+
+        let candidate = todayCandidate <= now
+            ? todayCandidate
+            : (calendar.date(byAdding: .day, value: -1, to: todayCandidate) ?? todayCandidate)
+
+        guard candidate >= medicine.startDate else { return nil }
+        return candidate
+    }
+
+    private func mostRecentIntervalOccurrence(reminder: Reminder, now: Date, intervalDays: Int) -> Date? {
+        let calendar = Calendar.current
+        let safeInterval = max(intervalDays, 1)
+
+        guard var anchor = reminderTime(on: medicine.startDate, reminder: reminder) else {
+            return nil
+        }
+
+        if anchor < medicine.startDate {
+            anchor = calendar.date(byAdding: .day, value: 1, to: anchor) ?? anchor
+        }
+
+        if now < anchor { return nil }
+
+        let dayDistance = calendar.dateComponents([.day], from: anchor.startOfDay, to: now.startOfDay).day ?? 0
+        let steps = dayDistance / safeInterval
+        guard let candidate = calendar.date(byAdding: .day, value: steps * safeInterval, to: anchor) else {
+            return nil
+        }
+
+        if candidate <= now {
+            return candidate
+        }
+
+        return calendar.date(byAdding: .day, value: -safeInterval, to: candidate)
+    }
+
+    private func mostRecentWeeklyOccurrence(reminder: Reminder, now: Date) -> Date? {
+        let calendar = Calendar.current
+        let allowedWeekdays = Set(reminder.daysOfWeek)
+        guard !allowedWeekdays.isEmpty else { return nil }
+
+        for dayOffset in 0...7 {
+            guard let day = calendar.date(byAdding: .day, value: -dayOffset, to: now) else { continue }
+            let weekday = calendar.component(.weekday, from: day)
+            guard allowedWeekdays.contains(weekday) else { continue }
+            guard let candidate = reminderTime(on: day, reminder: reminder) else { continue }
+            guard candidate <= now, candidate >= medicine.startDate else { continue }
+            return candidate
+        }
+
+        return nil
+    }
+
+    private func reminderTime(on date: Date, reminder: Reminder) -> Date? {
+        let calendar = Calendar.current
+        var components = calendar.dateComponents([.year, .month, .day], from: date)
+        let timeComponents = calendar.dateComponents([.hour, .minute], from: reminder.time)
+        components.hour = timeComponents.hour
+        components.minute = timeComponents.minute
+        components.second = 0
+        return calendar.date(from: components)
+    }
+
+    private struct ActiveReminderWindow {
+        let reminder: Reminder
+        let occurrenceStart: Date
+        let windowEnd: Date
     }
 }
 
 // MARK: - Edit Medicine Sheet
 
 struct EditMedicineSheet: View {
-    @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(UserSessionStore.self) private var session
 
     let medicine: Medicine
     @State private var viewModel: MedicineDetailViewModel?
@@ -381,15 +546,17 @@ struct EditMedicineSheet: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        if viewModel?.save() != nil {
-                            dismiss()
+                        Task {
+                            if await (viewModel?.save() ?? false) {
+                                dismiss()
+                            }
                         }
                     }
-                    .disabled(!(viewModel?.isValid ?? false))
+                    .disabled(!(viewModel?.isValid ?? false) || (viewModel?.isSaving ?? false))
                 }
             }
             .onAppear {
-                viewModel = MedicineDetailViewModel(medicine: medicine, modelContext: modelContext)
+                viewModel = MedicineDetailViewModel(medicine: medicine, session: session)
             }
         }
     }
@@ -404,9 +571,16 @@ struct EditMedicineSheet: View {
                 name: "Aspirin",
                 dosage: "500mg",
                 form: .tablet,
-                instructions: "Take after food with water"
+                instructions: "Take after food with water",
+                ownerUserId: AppConstants.previewUserId
             )
         )
     }
     .modelContainer(PersistenceController.preview.modelContainer)
+    .environment(
+        UserSessionStore(
+            previewUser: AuthenticatedUser(uid: AppConstants.previewUserId, email: "preview@example.com"),
+            modelContext: PersistenceController.preview.modelContainer.mainContext
+        )
+    )
 }

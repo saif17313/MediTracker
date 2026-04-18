@@ -11,6 +11,7 @@ import Observation
 
 /// ViewModel for adding and editing a single medicine.
 /// Handles form state, validation, and saving to SwiftData.
+@MainActor
 @Observable
 final class MedicineDetailViewModel {
     // MARK: - Form Fields
@@ -32,19 +33,19 @@ final class MedicineDetailViewModel {
 
     /// The medicine being edited (nil for new medicine)
     private var existingMedicine: Medicine?
-    private let modelContext: ModelContext
+    private let session: UserSessionStore
 
     // MARK: - Initialization
 
     /// Initialize for creating a new medicine
-    init(modelContext: ModelContext) {
-        self.modelContext = modelContext
+    init(session: UserSessionStore) {
+        self.session = session
         self.existingMedicine = nil
     }
 
     /// Initialize for editing an existing medicine
-    init(medicine: Medicine, modelContext: ModelContext) {
-        self.modelContext = modelContext
+    init(medicine: Medicine, session: UserSessionStore) {
+        self.session = session
         self.existingMedicine = medicine
         loadFromMedicine(medicine)
     }
@@ -52,31 +53,20 @@ final class MedicineDetailViewModel {
     // MARK: - Actions
 
     /// Saves the medicine (creates new or updates existing).
-    /// Returns the saved medicine object, or nil if failed.
+    /// Returns `true` if the cloud write succeeded.
     @discardableResult
-    func save() -> Medicine? {
+    func save() async -> Bool {
         guard isValid else {
             errorMessage = "Please fill in the medicine name and dosage."
-            return nil
+            return false
         }
 
         isSaving = true
         errorMessage = nil
 
-        let medicine: Medicine
-
-        if let existing = existingMedicine {
-            // Update existing
-            existing.name = name.trimmingCharacters(in: .whitespaces)
-            existing.dosage = dosage.trimmingCharacters(in: .whitespaces)
-            existing.form = form
-            existing.instructions = instructions.trimmingCharacters(in: .whitespaces)
-            existing.startDate = startDate
-            existing.endDate = hasEndDate ? endDate : nil
-            medicine = existing
-        } else {
-            // Create new
-            medicine = Medicine(
+        do {
+            try await session.saveMedicine(
+                existingMedicine: existingMedicine,
                 name: name.trimmingCharacters(in: .whitespaces),
                 dosage: dosage.trimmingCharacters(in: .whitespaces),
                 form: form,
@@ -84,17 +74,12 @@ final class MedicineDetailViewModel {
                 startDate: startDate,
                 endDate: hasEndDate ? endDate : nil
             )
-            modelContext.insert(medicine)
-        }
-
-        do {
-            try modelContext.save()
             isSaving = false
-            return medicine
+            return true
         } catch {
             errorMessage = "Failed to save medicine: \(error.localizedDescription)"
             isSaving = false
-            return nil
+            return false
         }
     }
 

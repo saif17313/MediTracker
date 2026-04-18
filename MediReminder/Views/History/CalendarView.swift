@@ -12,6 +12,7 @@ import SwiftData
 /// Days are color-coded: green (high adherence), orange (medium), red (low), gray (no data).
 struct CalendarView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(UserSessionStore.self) private var session
     @State private var viewModel: DoseHistoryViewModel?
     @State private var currentMonth: Date = .now
     @State private var dailyAdherence: [Date: Double] = [:]
@@ -42,7 +43,7 @@ struct CalendarView: View {
         .shadow(color: .black.opacity(0.05), radius: 5, y: 2)
         .onAppear {
             if viewModel == nil {
-                viewModel = DoseHistoryViewModel(modelContext: modelContext)
+                viewModel = DoseHistoryViewModel(modelContext: modelContext, session: session)
                 viewModel?.fetchHistory()
             }
             updateAdherence()
@@ -215,4 +216,10 @@ struct CalendarView: View {
     CalendarView()
         .padding()
         .modelContainer(PersistenceController.preview.modelContainer)
+        .environment(
+            UserSessionStore(
+                previewUser: AuthenticatedUser(uid: AppConstants.previewUserId, email: "preview@example.com"),
+                modelContext: PersistenceController.preview.modelContainer.mainContext
+            )
+        )
 }

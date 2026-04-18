@@ -11,6 +11,7 @@ import Observation
 
 /// ViewModel for the medicine list screen.
 /// Handles fetching, filtering, and deleting medicines.
+@MainActor
 @Observable
 final class MedicineListViewModel {
     var medicines: [Medicine] = []
@@ -20,9 +21,11 @@ final class MedicineListViewModel {
     var showingAddMedicine: Bool = false
 
     private let modelContext: ModelContext
+    private let session: UserSessionStore
 
-    init(modelContext: ModelContext) {
+    init(modelContext: ModelContext, session: UserSessionStore) {
         self.modelContext = modelContext
+        self.session = session
     }
 
     // MARK: - Computed Properties
@@ -56,8 +59,15 @@ final class MedicineListViewModel {
         isLoading = true
         errorMessage = nil
 
+        guard let userId = session.currentUser?.uid else {
+            medicines = []
+            isLoading = false
+            return
+        }
+
         do {
             let descriptor = FetchDescriptor<Medicine>(
+                predicate: #Predicate { $0.ownerUserId == userId },
                 sortBy: [SortDescriptor(\.name, order: .forward)]
             )
             medicines = try modelContext.fetch(descriptor)
@@ -70,47 +80,37 @@ final class MedicineListViewModel {
     }
 
     /// Deletes a medicine and cancels its notifications.
-    func deleteMedicine(_ medicine: Medicine) {
-        // Cancel all notifications for this medicine
-        NotificationService.shared.cancelAllReminders(for: medicine)
+    func deleteMedicine(_ medicine: Medicine) async {
+        isLoading = true
+        errorMessage = nil
 
-        modelContext.delete(medicine)
-        save()
-        fetchMedicines()
+        do {
+            try await session.deleteMedicine(medicine)
+            fetchMedicines()
+        } catch {
+            errorMessage = "Failed to delete medicine: \(error.localizedDescription)"
+        }
+
+        isLoading = false
     }
 
     /// Toggles a medicine's active status.
-    func toggleMedicineActive(_ medicine: Medicine) {
-        medicine.isActive.toggle()
+    func toggleMedicineActive(_ medicine: Medicine) async {
+        errorMessage = nil
 
-        if !medicine.isActive {
-            // Deactivating — cancel notifications
-            NotificationService.shared.cancelAllReminders(for: medicine)
-        } else {
-            // Reactivating — reschedule notifications
-            for reminder in medicine.reminders where reminder.isEnabled {
-                NotificationService.shared.scheduleReminder(for: medicine, reminder: reminder)
-            }
+        do {
+            try await session.setMedicineActive(medicine, isActive: !medicine.isActive)
+            fetchMedicines()
+        } catch {
+            errorMessage = "Failed to update medicine: \(error.localizedDescription)"
         }
-
-        save()
     }
 
     /// Deletes medicines at the given index set (for swipe-to-delete in List).
-    func deleteMedicines(at offsets: IndexSet, from list: [Medicine]) {
+    func deleteMedicines(at offsets: IndexSet, from list: [Medicine]) async {
         for index in offsets {
             let medicine = list[index]
-            deleteMedicine(medicine)
-        }
-    }
-
-    // MARK: - Private
-
-    private func save() {
-        do {
-            try modelContext.save()
-        } catch {
-            errorMessage = "Failed to save: \(error.localizedDescription)"
+            await deleteMedicine(medicine)
         }
     }
 }

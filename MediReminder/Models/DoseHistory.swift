@@ -13,6 +13,7 @@ import Foundation
 @Model
 final class DoseHistory {
     var id: UUID
+    var ownerUserId: String
     var status: DoseStatus
     var scheduledTime: Date
     var actionTime: Date?
@@ -29,6 +30,7 @@ final class DoseHistory {
         notes: String = ""
     ) {
         self.id = UUID()
+        self.ownerUserId = medicine.ownerUserId
         self.status = status
         self.scheduledTime = scheduledTime
         self.actionTime = actionTime

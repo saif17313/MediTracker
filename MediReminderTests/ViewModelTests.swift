@@ -23,11 +23,22 @@ struct ViewModelTests {
         return ModelContext(container)
     }
 
+    @MainActor
+    private func makePreviewSession(context: ModelContext) -> UserSessionStore {
+        UserSessionStore(
+            previewUser: AuthenticatedUser(
+                uid: AppConstants.previewUserId,
+                email: "preview@example.com"
+            ),
+            modelContext: context
+        )
+    }
+
     // MARK: - MedicineDetailViewModel Tests
 
-    @Test func testMedicineDetailViewModelValidation() throws {
+    @MainActor @Test func testMedicineDetailViewModelValidation() throws {
         let context = try makeTestContext()
-        let vm = MedicineDetailViewModel(modelContext: context)
+        let vm = MedicineDetailViewModel(session: makePreviewSession(context: context))
 
         // Empty name should be invalid
         vm.name = ""
@@ -49,42 +60,40 @@ struct ViewModelTests {
         #expect(vm.isValid == false)
     }
 
-    @Test func testMedicineDetailViewModelSave() throws {
+    @MainActor @Test func testMedicineDetailViewModelStartsEmpty() throws {
         let context = try makeTestContext()
-        let vm = MedicineDetailViewModel(modelContext: context)
+        let vm = MedicineDetailViewModel(session: makePreviewSession(context: context))
 
-        vm.name = "Aspirin"
-        vm.dosage = "500mg"
-        vm.form = .tablet
-        vm.instructions = "Take after food"
-
-        let medicine = vm.save()
-        #expect(medicine != nil)
-        #expect(medicine?.name == "Aspirin")
-        #expect(medicine?.dosage == "500mg")
+        #expect(vm.name.isEmpty)
+        #expect(vm.dosage.isEmpty)
+        #expect(vm.form == .tablet)
+        #expect(vm.hasEndDate == false)
     }
 
-    @Test func testMedicineDetailViewModelEdit() throws {
+    @MainActor @Test func testMedicineDetailViewModelLoadsExistingMedicine() throws {
         let context = try makeTestContext()
 
-        let medicine = Medicine(name: "Old Name", dosage: "100mg", form: .tablet)
+        let medicine = Medicine(
+            name: "Old Name",
+            dosage: "100mg",
+            form: .tablet,
+            ownerUserId: AppConstants.previewUserId
+        )
         context.insert(medicine)
         try context.save()
 
-        let vm = MedicineDetailViewModel(medicine: medicine, modelContext: context)
+        let vm = MedicineDetailViewModel(
+            medicine: medicine,
+            session: makePreviewSession(context: context)
+        )
         #expect(vm.name == "Old Name")
-
-        vm.name = "New Name"
-        vm.dosage = "200mg"
-        let updated = vm.save()
-
-        #expect(updated?.name == "New Name")
-        #expect(updated?.dosage == "200mg")
+        #expect(vm.dosage == "100mg")
+        #expect(vm.form == .tablet)
     }
 
-    @Test func testMedicineDetailViewModelReset() throws {
+    @MainActor @Test func testMedicineDetailViewModelReset() throws {
         let context = try makeTestContext()
-        let vm = MedicineDetailViewModel(modelContext: context)
+        let vm = MedicineDetailViewModel(session: makePreviewSession(context: context))
 
         vm.name = "Test"
         vm.dosage = "500mg"

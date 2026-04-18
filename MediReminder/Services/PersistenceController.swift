@@ -27,24 +27,60 @@ struct PersistenceController {
     let modelContainer: ModelContainer
 
     init(inMemory: Bool = false) {
+        do {
+            modelContainer = try Self.makeModelContainer(inMemory: inMemory)
+        } catch {
+            fatalError("Failed to create ModelContainer: \(error.localizedDescription)")
+        }
+    }
+
+    private static func makeModelContainer(inMemory: Bool) throws -> ModelContainer {
         let schema = Schema([
             Medicine.self,
             Reminder.self,
             DoseHistory.self
         ])
 
-        let config = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: inMemory
-        )
+        if inMemory {
+            let config = ModelConfiguration(
+                schema: schema,
+                isStoredInMemoryOnly: true
+            )
+            return try ModelContainer(for: schema, configurations: [config])
+        }
+
+        let storeURL = try persistentStoreURL()
+        let config = ModelConfiguration(schema: schema, url: storeURL)
 
         do {
-            modelContainer = try ModelContainer(
-                for: schema,
-                configurations: [config]
-            )
+            return try ModelContainer(for: schema, configurations: [config])
         } catch {
-            fatalError("Failed to create ModelContainer: \(error.localizedDescription)")
+            try? removePersistentStoreArtifacts()
+            return try ModelContainer(for: schema, configurations: [config])
+        }
+    }
+
+    private static func persistentStoreURL() throws -> URL {
+        let fileManager = FileManager.default
+        let applicationSupportURL = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+        let rootURL = applicationSupportURL?.appendingPathComponent("MediReminder", isDirectory: true)
+
+        guard let rootURL else {
+            throw CocoaError(.fileNoSuchFile)
+        }
+
+        try fileManager.createDirectory(at: rootURL, withIntermediateDirectories: true)
+        return rootURL.appendingPathComponent("MediReminder.store")
+    }
+
+    private static func removePersistentStoreArtifacts() throws {
+        let fileManager = FileManager.default
+        let applicationSupportURL = fileManager.urls(for: .applicationSupportDirectory, in: .userDomainMask).first
+        let rootURL = applicationSupportURL?.appendingPathComponent("MediReminder", isDirectory: true)
+
+        guard let rootURL else { return }
+        if fileManager.fileExists(atPath: rootURL.path) {
+            try fileManager.removeItem(at: rootURL)
         }
     }
 
@@ -54,6 +90,7 @@ struct PersistenceController {
     @MainActor
     private func addSampleData() {
         let context = modelContainer.mainContext
+        let previewUserId = AppConstants.previewUserId
 
         // Sample Medicine 1: Aspirin
         let aspirin = Medicine(
@@ -61,7 +98,8 @@ struct PersistenceController {
             dosage: "500mg",
             form: .tablet,
             instructions: "Take after food with water",
-            startDate: Calendar.current.date(byAdding: .day, value: -7, to: .now) ?? .now
+            startDate: Calendar.current.date(byAdding: .day, value: -7, to: .now) ?? .now,
+            ownerUserId: previewUserId
         )
         context.insert(aspirin)
 
@@ -83,7 +121,8 @@ struct PersistenceController {
             form: .capsule,
             instructions: "Take before meals",
             startDate: Calendar.current.date(byAdding: .day, value: -3, to: .now) ?? .now,
-            endDate: Calendar.current.date(byAdding: .day, value: 4, to: .now)
+            endDate: Calendar.current.date(byAdding: .day, value: 4, to: .now),
+            ownerUserId: previewUserId
         )
         context.insert(amoxicillin)
 
@@ -101,7 +140,8 @@ struct PersistenceController {
             name: "Dextromethorphan",
             dosage: "10ml",
             form: .syrup,
-            instructions: "Take before sleep"
+            instructions: "Take before sleep",
+            ownerUserId: previewUserId
         )
         context.insert(coughSyrup)
 

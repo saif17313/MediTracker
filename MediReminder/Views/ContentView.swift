@@ -8,44 +8,61 @@
 import SwiftUI
 import SwiftData
 
-/// Root view of the app containing the main tab navigation.
-/// Provides four tabs: Medicines, History, Drug Search, and Settings.
+/// Root view of the app.
+/// Shows the authentication flow until a user signs in.
 struct ContentView: View {
+    @Environment(UserSessionStore.self) private var session
+
+    var body: some View {
+        Group {
+            switch session.authState {
+            case .loading:
+                ProgressView("Checking account...")
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+            case .signedOut:
+                AuthGateView()
+
+            case .signedIn:
+                AuthenticatedHomeView()
+            }
+        }
+    }
+}
+
+/// Main signed-in application shell with the tab navigation.
+struct AuthenticatedHomeView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(UserSessionStore.self) private var session
     @State private var selectedTab: AppTab = .medicines
     @State private var navigateToMedicineId: UUID?
 
     var body: some View {
         TabView(selection: $selectedTab) {
-            // MARK: - Medicines Tab
             MedicineListView()
                 .tabItem {
                     Label(AppTab.medicines.rawValue, systemImage: AppTab.medicines.iconName)
                 }
                 .tag(AppTab.medicines)
 
-            // MARK: - History Tab
             DoseHistoryView()
                 .tabItem {
                     Label(AppTab.history.rawValue, systemImage: AppTab.history.iconName)
                 }
                 .tag(AppTab.history)
 
-            // MARK: - Drug Search Tab
             DrugSearchView()
                 .tabItem {
                     Label(AppTab.search.rawValue, systemImage: AppTab.search.iconName)
                 }
                 .tag(AppTab.search)
 
-            // MARK: - Scan Rx Tab
             PrescriptionScanView()
                 .tabItem {
                     Label(AppTab.scan.rawValue, systemImage: AppTab.scan.iconName)
                 }
                 .tag(AppTab.scan)
 
-            // MARK: - Settings Tab
             SettingsView()
                 .tabItem {
                     Label(AppTab.settings.rawValue, systemImage: AppTab.settings.iconName)
@@ -54,59 +71,120 @@ struct ContentView: View {
         }
         .tint(.blue)
         .onReceive(NotificationCenter.default.publisher(for: .openMedicineDetail)) { notification in
-            // When user taps a notification, navigate to the medicine
-            if let medicineId = notification.userInfo?["medicineId"] as? UUID {
+            if let medicineId = notification.userInfo?["medicineId"] as? UUID,
+               let ownerUserId = notification.userInfo?["ownerUserId"] as? String,
+               ownerUserId == session.currentUser?.uid {
                 navigateToMedicineId = medicineId
                 selectedTab = .medicines
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .doseActionReceived)) { notification in
-            // Handle dose action from notification
             handleDoseAction(from: notification)
         }
         .task {
-            // Request notification permission on first launch
             try? await NotificationService.shared.requestAuthorization()
+        }
+        .overlay(alignment: .top) {
+            if session.isSyncingCloudData {
+                ProgressView("Syncing your account data...")
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 10)
+                    .background(.ultraThinMaterial, in: Capsule())
+                    .padding(.top, 8)
+            }
         }
     }
 
-    // MARK: - Notification Handling
-
     private func handleDoseAction(from notification: Foundation.Notification) {
         guard let medicineIdString = notification.userInfo?["medicineId"] as? UUID,
+              let ownerUserId = notification.userInfo?["ownerUserId"] as? String,
               let statusString = notification.userInfo?["status"] as? String,
               let status = DoseStatus(rawValue: statusString),
               let scheduledTime = notification.userInfo?["scheduledTime"] as? Date
         else { return }
 
-        // Find the medicine and record the dose
+        guard ownerUserId == session.currentUser?.uid else { return }
+
         let descriptor = FetchDescriptor<Medicine>(
             predicate: #Predicate { $0.id == medicineIdString }
         )
         guard let medicine = try? modelContext.fetch(descriptor).first else { return }
 
-        let record = DoseHistory(
-            status: status,
-            scheduledTime: scheduledTime,
-            actionTime: .now,
-            medicine: medicine
-        )
-        modelContext.insert(record)
-        try? modelContext.save()
+        Task {
+            do {
+                _ = try await session.recordDose(
+                    medicine: medicine,
+                    status: status,
+                    scheduledTime: scheduledTime,
+                    actionTime: .now
+                )
+            } catch {
+                print("Failed to sync dose action: \(error.localizedDescription)")
+            }
+        }
     }
 }
 
-// MARK: - Settings View
-
-/// Basic settings view with notification and app info
+/// Settings screen for notification and account actions.
 struct SettingsView: View {
+    @Environment(UserSessionStore.self) private var session
+
     @State private var notificationStatus: String = "Checking..."
     @State private var pendingCount: Int = 0
 
     var body: some View {
         NavigationStack {
             List {
-                // MARK: Notifications Section
+                Section("Account") {
+                    HStack {
+                        Label("Signed In", systemImage: "person.crop.circle.fill")
+                        Spacer()
+                        Text(session.currentUserEmail)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Button("Sign Out", role: .destructive) {
+                        Task {
+                            await session.signOut()
+                        }
+                    }
+                }
+
+                Section("This Device") {
+                    HStack {
+                        Label("Device Name", systemImage: "iphone")
+                        Spacer()
+                        Text(session.currentDevice.name)
+                            .foregroundStyle(.secondary)
+                    }
+
+                    HStack {
+                        Label("Installation ID", systemImage: "number")
+                        Spacer()
+                        Text(session.currentDeviceIdentifierShort)
+                            .foregroundStyle(.secondary)
+                    }
+                }
+
+                Section("Cloud Sync") {
+                    HStack {
+                        Label("Status", systemImage: "arrow.triangle.2.circlepath")
+                        Spacer()
+                        Text(session.isSyncingCloudData ? "Syncing" : "Up to date")
+                            .foregroundStyle(.secondary)
+                    }
+
+                    Button {
+                        Task {
+                            await session.refreshCurrentUserData()
+                            await checkStatus()
+                        }
+                    } label: {
+                        Label("Sync Now", systemImage: "icloud.and.arrow.down")
+                    }
+                    .disabled(session.isSyncingCloudData)
+                }
+
                 Section("Notifications") {
                     HStack {
                         Label("Permission", systemImage: "bell.fill")
@@ -125,6 +203,7 @@ struct SettingsView: View {
                     Button {
                         Task {
                             try? await NotificationService.shared.requestAuthorization()
+                            await session.refreshCurrentUserData()
                             await checkStatus()
                         }
                     } label: {
@@ -132,7 +211,6 @@ struct SettingsView: View {
                     }
                 }
 
-                // MARK: About Section
                 Section("About") {
                     HStack {
                         Label("Version", systemImage: "info.circle")
@@ -156,9 +234,8 @@ struct SettingsView: View {
                     }
                 }
 
-                // MARK: Data Section
                 Section("Data") {
-                    Label("All data is stored locally on your device.", systemImage: "lock.shield.fill")
+                    Label("Medicines, reminders, and history are now scoped to the signed-in Firebase user and rescheduled on this device.", systemImage: "person.badge.key.fill")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -184,9 +261,13 @@ struct SettingsView: View {
     }
 }
 
-// MARK: - Preview
-
 #Preview {
     ContentView()
         .modelContainer(PersistenceController.preview.modelContainer)
+        .environment(
+            UserSessionStore(
+                previewUser: AuthenticatedUser(uid: "preview-user", email: "preview@example.com"),
+                modelContext: PersistenceController.preview.modelContainer.mainContext
+            )
+        )
 }

@@ -11,6 +11,7 @@ import Observation
 
 /// ViewModel for managing reminders for a specific medicine.
 /// Handles creating, editing, toggling, and deleting reminders, plus notification scheduling.
+@MainActor
 @Observable
 final class ReminderViewModel {
     // MARK: - Form Fields
@@ -20,6 +21,8 @@ final class ReminderViewModel {
     }()
     var selectedFrequency: ReminderFrequency = .daily
     var selectedDaysOfWeek: Set<Int> = []
+    var selectedCustomIntervalDays: Int = 1
+    var selectedTakeNowWindowHours: Int = 2
     var snoozeDuration: Int = AppConstants.defaultSnoozeDurationMinutes
 
     // MARK: - UI State
@@ -31,13 +34,13 @@ final class ReminderViewModel {
 
     /// The medicine these reminders belong to
     let medicine: Medicine
-    private let modelContext: ModelContext
+    private let session: UserSessionStore
 
     // MARK: - Initialization
 
-    init(medicine: Medicine, modelContext: ModelContext) {
+    init(medicine: Medicine, session: UserSessionStore) {
         self.medicine = medicine
-        self.modelContext = modelContext
+        self.session = session
     }
 
     // MARK: - Actions
@@ -64,55 +67,89 @@ final class ReminderViewModel {
     }
 
     /// Creates a new reminder with the current form values and schedules its notification.
-    func addReminder() {
+    func addReminder() async {
         guard notificationPermissionGranted else {
             errorMessage = "Please enable notifications in Settings to add reminders."
             return
         }
 
-        let reminder = Reminder(
-            time: selectedTime,
-            frequency: selectedFrequency,
-            daysOfWeek: Array(selectedDaysOfWeek).sorted(),
-            medicine: medicine,
-            snoozeDurationMinutes: snoozeDuration
-        )
+        isLoading = true
+        errorMessage = nil
 
-        modelContext.insert(reminder)
-        save()
+        do {
+            let reminderId = try await session.saveReminder(
+                medicine: medicine,
+                time: selectedTime,
+                frequency: selectedFrequency,
+                daysOfWeek: Array(selectedDaysOfWeek).sorted(),
+                customIntervalDays: selectedFrequency == .custom ? selectedCustomIntervalDays : nil,
+                takeNowWindowHours: selectedTakeNowWindowHours,
+                isEnabled: true,
+                snoozeDurationMinutes: snoozeDuration
+            )
+            loadReminders()
+            if let reminder = reminders.first(where: { $0.id == reminderId }) {
+                NotificationService.shared.scheduleReminder(for: medicine, reminder: reminder)
+            }
+            resetForm()
+        } catch {
+            errorMessage = "Failed to save reminder: \(error.localizedDescription)"
+        }
 
-        // Schedule the notification
-        NotificationService.shared.scheduleReminder(for: medicine, reminder: reminder)
-
-        // Reset form and reload
-        resetForm()
-        loadReminders()
+        isLoading = false
     }
 
     /// Toggles a reminder on/off and schedules/cancels its notification.
-    func toggleReminder(_ reminder: Reminder) {
-        reminder.isEnabled.toggle()
-        save()
+    func toggleReminder(_ reminder: Reminder) async {
+        isLoading = true
+        errorMessage = nil
 
-        if reminder.isEnabled {
-            NotificationService.shared.scheduleReminder(for: medicine, reminder: reminder)
-        } else {
-            NotificationService.shared.cancelReminder(reminder)
+        do {
+            let shouldEnable = !reminder.isEnabled
+            _ = try await session.saveReminder(
+                medicine: medicine,
+                existingReminder: reminder,
+                time: reminder.time,
+                frequency: reminder.frequency,
+                daysOfWeek: reminder.daysOfWeek,
+                customIntervalDays: reminder.customIntervalDays,
+                takeNowWindowHours: reminder.takeNowWindowHours,
+                isEnabled: shouldEnable,
+                snoozeDurationMinutes: reminder.snoozeDurationMinutes
+            )
+            loadReminders()
+
+            if shouldEnable {
+                NotificationService.shared.scheduleReminder(for: medicine, reminder: reminder)
+            } else {
+                NotificationService.shared.cancelReminder(reminder)
+            }
+        } catch {
+            errorMessage = "Failed to update reminder: \(error.localizedDescription)"
         }
+
+        isLoading = false
     }
 
     /// Deletes a reminder and cancels its notification.
-    func deleteReminder(_ reminder: Reminder) {
+    func deleteReminder(_ reminder: Reminder) async {
+        isLoading = true
         NotificationService.shared.cancelReminder(reminder)
-        modelContext.delete(reminder)
-        save()
-        loadReminders()
+
+        do {
+            try await session.deleteReminder(reminder)
+            loadReminders()
+        } catch {
+            errorMessage = "Failed to delete reminder: \(error.localizedDescription)"
+        }
+
+        isLoading = false
     }
 
     /// Deletes reminders at given offsets.
-    func deleteReminders(at offsets: IndexSet) {
+    func deleteReminders(at offsets: IndexSet) async {
         for index in offsets {
-            deleteReminder(reminders[index])
+            await deleteReminder(reminders[index])
         }
     }
 
@@ -121,6 +158,8 @@ final class ReminderViewModel {
         selectedTime = Calendar.current.date(bySettingHour: 8, minute: 0, second: 0, of: .now) ?? .now
         selectedFrequency = .daily
         selectedDaysOfWeek = []
+        selectedCustomIntervalDays = 1
+        selectedTakeNowWindowHours = 2
         snoozeDuration = AppConstants.defaultSnoozeDurationMinutes
         showingAddReminder = false
     }
@@ -143,16 +182,10 @@ final class ReminderViewModel {
 
         selectedTime = time
         selectedFrequency = .daily
-        addReminder()
-    }
-
-    // MARK: - Private
-
-    private func save() {
-        do {
-            try modelContext.save()
-        } catch {
-            errorMessage = "Failed to save: \(error.localizedDescription)"
+        selectedCustomIntervalDays = 1
+        selectedTakeNowWindowHours = 2
+        Task {
+            await addReminder()
         }
     }
 }

@@ -13,9 +13,12 @@ import Foundation
 @Model
 final class Reminder {
     var id: UUID
+    var ownerUserId: String
     var time: Date
     var frequency: ReminderFrequency
     var daysOfWeek: [Int]
+    var customIntervalDays: Int?
+    var takeNowWindowHours: Int
     var isEnabled: Bool
     var notificationIdentifier: String
     var snoozeDurationMinutes: Int
@@ -27,13 +30,18 @@ final class Reminder {
         time: Date,
         frequency: ReminderFrequency = .daily,
         daysOfWeek: [Int] = [],
+        customIntervalDays: Int? = nil,
+        takeNowWindowHours: Int = 2,
         medicine: Medicine,
         snoozeDurationMinutes: Int = 10
     ) {
         self.id = UUID()
+        self.ownerUserId = medicine.ownerUserId
         self.time = time
         self.frequency = frequency
         self.daysOfWeek = daysOfWeek
+        self.customIntervalDays = customIntervalDays
+        self.takeNowWindowHours = max(takeNowWindowHours, 1)
         self.isEnabled = true
         self.notificationIdentifier = UUID().uuidString
         self.medicine = medicine
@@ -53,7 +61,7 @@ final class Reminder {
         case .daily:
             return "Every day at \(formattedTime)"
         case .everyOtherDay:
-            return "Every other day at \(formattedTime)"
+            return "Every 15 days at \(formattedTime)"
         case .weekly:
             let dayNames = daysOfWeek.compactMap { dayNumber -> String? in
                 let formatter = DateFormatter()
@@ -62,7 +70,11 @@ final class Reminder {
             }
             return "Weekly on \(dayNames.joined(separator: ", ")) at \(formattedTime)"
         case .custom:
-            return "Custom schedule at \(formattedTime)"
+            if let interval = customIntervalDays, interval > 0 {
+                let dayLabel = interval == 1 ? "day" : "days"
+                return "Every \(interval) \(dayLabel) at \(formattedTime) • Take window: \(takeNowWindowHours)h"
+            }
+            return "Custom schedule at \(formattedTime) • Take window: \(takeNowWindowHours)h"
         }
     }
 }
@@ -81,7 +93,7 @@ enum ReminderFrequency: String, Codable, CaseIterable, Identifiable {
     var displayName: String {
         switch self {
         case .daily:        return "Daily"
-        case .everyOtherDay: return "Every Other Day"
+        case .everyOtherDay: return "Every 15 Days"
         case .weekly:       return "Weekly"
         case .custom:       return "Custom"
         }
