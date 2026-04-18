@@ -13,6 +13,16 @@ struct MedicineRowView: View {
     let medicine: Medicine
 
     var body: some View {
+        // Guard against accessing properties on a deleted/detached SwiftData model.
+        // During async delete, SwiftUI may still try to render this row.
+        if medicine.isDeleted {
+            EmptyView()
+        } else {
+            rowContent
+        }
+    }
+
+    private var rowContent: some View {
         HStack(spacing: 12) {
             // Medicine form icon
             Image(systemName: medicine.form.iconName)

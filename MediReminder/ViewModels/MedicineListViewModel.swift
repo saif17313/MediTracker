@@ -81,6 +81,10 @@ final class MedicineListViewModel {
 
     /// Deletes a medicine and cancels its notifications.
     func deleteMedicine(_ medicine: Medicine) async {
+        // Remove from local array immediately so SwiftUI stops rendering it
+        // before the async context deletion triggers a re-render with a detached object.
+        medicines.removeAll { $0.id == medicine.id }
+
         isLoading = true
         errorMessage = nil
 
@@ -89,6 +93,7 @@ final class MedicineListViewModel {
             fetchMedicines()
         } catch {
             errorMessage = "Failed to delete medicine: \(error.localizedDescription)"
+            fetchMedicines() // Re-fetch to restore the list on failure
         }
 
         isLoading = false
