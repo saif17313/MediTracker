@@ -18,6 +18,7 @@ final class Reminder {
     var frequency: ReminderFrequency
     var daysOfWeek: [Int]
     var customIntervalDays: Int?
+    var takeNowWindowHours: Int
     var isEnabled: Bool
     var notificationIdentifier: String
     var snoozeDurationMinutes: Int
@@ -30,6 +31,7 @@ final class Reminder {
         frequency: ReminderFrequency = .daily,
         daysOfWeek: [Int] = [],
         customIntervalDays: Int? = nil,
+        takeNowWindowHours: Int = 2,
         medicine: Medicine,
         snoozeDurationMinutes: Int = 10
     ) {
@@ -39,6 +41,7 @@ final class Reminder {
         self.frequency = frequency
         self.daysOfWeek = daysOfWeek
         self.customIntervalDays = customIntervalDays
+        self.takeNowWindowHours = max(takeNowWindowHours, 1)
         self.isEnabled = true
         self.notificationIdentifier = UUID().uuidString
         self.medicine = medicine
@@ -69,9 +72,9 @@ final class Reminder {
         case .custom:
             if let interval = customIntervalDays, interval > 0 {
                 let dayLabel = interval == 1 ? "day" : "days"
-                return "Every \(interval) \(dayLabel) at \(formattedTime)"
+                return "Every \(interval) \(dayLabel) at \(formattedTime) • Take window: \(takeNowWindowHours)h"
             }
-            return "Custom schedule at \(formattedTime)"
+            return "Custom schedule at \(formattedTime) • Take window: \(takeNowWindowHours)h"
         }
     }
 }

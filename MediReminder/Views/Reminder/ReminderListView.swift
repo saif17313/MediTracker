@@ -143,6 +143,9 @@ struct ReminderListView: View {
                 Text(reminder.scheduleDescription)
                     .font(.caption)
                     .foregroundStyle(.secondary)
+                Text(reminder.takeNowWindowHours == 1 ? "Take Now window: 1 hour" : "Take Now window: \(reminder.takeNowWindowHours) hours")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
             }
 
             Spacer()

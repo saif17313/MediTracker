@@ -89,6 +89,17 @@ struct AddReminderView: View {
                     }
                 }
 
+                // MARK: - Take Now Activation Window
+                Section("Medicine Taking Time") {
+                    Stepper(value: $viewModel.selectedTakeNowWindowHours, in: 1...24) {
+                        let hours = viewModel.selectedTakeNowWindowHours
+                        Text(hours == 1 ? "Take Now active for 1 hour" : "Take Now active for \(hours) hours")
+                    }
+                    Text("After reminder time starts, Take Now will remain active for this duration.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
                 // MARK: - Summary
                 Section("Summary") {
                     HStack {
@@ -100,6 +111,9 @@ struct AddReminderView: View {
                                 .fontWeight(.medium)
                             Text(summaryText)
                                 .font(.caption)
+                                .foregroundStyle(.secondary)
+                            Text(takeNowSummaryText)
+                                .font(.caption2)
                                 .foregroundStyle(.secondary)
                         }
                     }
@@ -188,6 +202,13 @@ struct AddReminderView: View {
             let dayLabel = interval == 1 ? "day" : "days"
             return "Every \(interval) \(dayLabel) at \(timeStr)"
         }
+    }
+
+    private var takeNowSummaryText: String {
+        let hours = viewModel.selectedTakeNowWindowHours
+        return hours == 1
+            ? "Take Now will be available for 1 hour after each reminder starts."
+            : "Take Now will be available for \(hours) hours after each reminder starts."
     }
 }
 

@@ -59,6 +59,7 @@ struct ReminderDocument: Codable {
     let frequencyRawValue: String
     let daysOfWeek: [Int]
     let customIntervalDays: Int?
+    let takeNowWindowHours: Int
     let isEnabled: Bool
     let notificationIdentifier: String
     let snoozeDurationMinutes: Int
@@ -227,6 +228,7 @@ final class UserDataSyncService {
         frequency: ReminderFrequency,
         daysOfWeek: [Int],
         customIntervalDays: Int? = nil,
+        takeNowWindowHours: Int,
         isEnabled: Bool,
         snoozeDurationMinutes: Int,
         in context: ModelContext
@@ -240,6 +242,7 @@ final class UserDataSyncService {
             frequencyRawValue: frequency.rawValue,
             daysOfWeek: daysOfWeek,
             customIntervalDays: customIntervalDays,
+            takeNowWindowHours: max(takeNowWindowHours, 1),
             isEnabled: isEnabled,
             notificationIdentifier: existingReminder?.notificationIdentifier ?? UUID().uuidString,
             snoozeDurationMinutes: snoozeDurationMinutes
@@ -433,6 +436,7 @@ final class UserDataSyncService {
                 frequency: ReminderFrequency(rawValue: document.frequencyRawValue) ?? .daily,
                 daysOfWeek: document.daysOfWeek,
                 customIntervalDays: document.customIntervalDays,
+                takeNowWindowHours: document.takeNowWindowHours,
                 medicine: medicine,
                 snoozeDurationMinutes: document.snoozeDurationMinutes
             )
@@ -447,6 +451,7 @@ final class UserDataSyncService {
             reminder.frequency = ReminderFrequency(rawValue: document.frequencyRawValue) ?? .daily
             reminder.daysOfWeek = document.daysOfWeek
             reminder.customIntervalDays = document.customIntervalDays
+            reminder.takeNowWindowHours = max(document.takeNowWindowHours, 1)
             reminder.isEnabled = document.isEnabled
             reminder.notificationIdentifier = document.notificationIdentifier
             reminder.snoozeDurationMinutes = document.snoozeDurationMinutes

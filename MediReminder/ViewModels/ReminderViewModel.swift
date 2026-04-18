@@ -22,6 +22,7 @@ final class ReminderViewModel {
     var selectedFrequency: ReminderFrequency = .daily
     var selectedDaysOfWeek: Set<Int> = []
     var selectedCustomIntervalDays: Int = 1
+    var selectedTakeNowWindowHours: Int = 2
     var snoozeDuration: Int = AppConstants.defaultSnoozeDurationMinutes
 
     // MARK: - UI State
@@ -82,6 +83,7 @@ final class ReminderViewModel {
                 frequency: selectedFrequency,
                 daysOfWeek: Array(selectedDaysOfWeek).sorted(),
                 customIntervalDays: selectedFrequency == .custom ? selectedCustomIntervalDays : nil,
+                takeNowWindowHours: selectedTakeNowWindowHours,
                 isEnabled: true,
                 snoozeDurationMinutes: snoozeDuration
             )
@@ -111,6 +113,7 @@ final class ReminderViewModel {
                 frequency: reminder.frequency,
                 daysOfWeek: reminder.daysOfWeek,
                 customIntervalDays: reminder.customIntervalDays,
+                takeNowWindowHours: reminder.takeNowWindowHours,
                 isEnabled: shouldEnable,
                 snoozeDurationMinutes: reminder.snoozeDurationMinutes
             )
@@ -156,6 +159,7 @@ final class ReminderViewModel {
         selectedFrequency = .daily
         selectedDaysOfWeek = []
         selectedCustomIntervalDays = 1
+        selectedTakeNowWindowHours = 2
         snoozeDuration = AppConstants.defaultSnoozeDurationMinutes
         showingAddReminder = false
     }
@@ -179,6 +183,7 @@ final class ReminderViewModel {
         selectedTime = time
         selectedFrequency = .daily
         selectedCustomIntervalDays = 1
+        selectedTakeNowWindowHours = 2
         Task {
             await addReminder()
         }
