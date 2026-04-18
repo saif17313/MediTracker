@@ -1,6 +1,6 @@
 # MediReminder 💊
 
-A comprehensive iOS medicine reminder app built with **SwiftUI** and **SwiftData**.
+A comprehensive iOS medicine reminder app built with **SwiftUI**, **SwiftData**, **Firebase Authentication**, and **Cloud Firestore**.
 
 ## Features
 
@@ -10,20 +10,26 @@ A comprehensive iOS medicine reminder app built with **SwiftUI** and **SwiftData
 - Set start and end dates
 - Mark medicines as active or completed
 
-### 2. Smart Reminder System
+### 2. User Accounts & Private Data
+- Email/password sign in and account creation with Firebase Authentication
+- Each signed-in user only loads their own medicines, reminders, and dose history
+- Firestore-backed sync with a local SwiftData cache for the active account
+- Device registration so reminder scheduling stays tied to the current signed-in device
+
+### 3. Smart Reminder System
 - Set multiple reminder times per medicine
 - Choose frequency: Daily, Every Other Day, Weekly, or Custom
 - Local notifications with **Take**, **Skip**, and **Snooze** action buttons
 - Quick-add presets (Morning, Afternoon, Evening, Bedtime)
 - Handles iOS 64 pending notification limit automatically
 
-### 3. Dose History Tracking
+### 4. Dose History Tracking
 - Automatic logging of taken, skipped, and missed doses
 - Filter history by date range, medicine, and status
 - Daily/weekly adherence percentage
 - Monthly calendar view with color-coded adherence
 
-### 4. Drug Information Search (OpenFDA API)
+### 5. Drug Information Search (OpenFDA API)
 - Search drugs by brand or generic name
 - View purpose, usage, warnings, side effects, and drug interactions
 - Recent search history
@@ -37,6 +43,8 @@ A comprehensive iOS medicine reminder app built with **SwiftUI** and **SwiftData
 - macOS (for building and running)
 
 ## Setup Instructions
+
+Before building, complete the Firebase setup in [FIREBASE_SETUP.md](FIREBASE_SETUP.md).
 
 ### Option A: Using XcodeGen (Recommended)
 
@@ -114,9 +122,13 @@ MediReminder/
 │   │       ├── DoseBadge.swift          # Status badge component
 │   │       └── TimePickerField.swift    # Time picker component
 │   ├── Services/
+│   │   ├── AuthService.swift            # Firebase Authentication wrapper
+│   │   ├── DeviceIdentityService.swift  # Stable installation identity
 │   │   ├── NotificationService.swift    # Local notification manager
 │   │   ├── OpenFDAService.swift         # FDA API client
-│   │   └── PersistenceController.swift  # SwiftData configuration
+│   │   ├── PersistenceController.swift  # SwiftData configuration
+│   │   ├── UserDataSyncService.swift    # Firestore sync + cache hydration
+│   │   └── UserSessionStore.swift       # Signed-in user/session state
 │   ├── Utilities/
 │   │   ├── Extensions.swift             # Date, String, Color helpers
 │   │   └── Constants.swift              # App-wide constants
@@ -131,12 +143,12 @@ MediReminder/
 
 ## Architecture
 
-**MVVM (Model-View-ViewModel)** with SwiftUI and SwiftData:
+**MVVM (Model-View-ViewModel)** with SwiftUI, SwiftData, Firebase Auth, and Firestore:
 
-- **Models**: SwiftData `@Model` classes with relationships
+- **Models**: SwiftData `@Model` classes acting as the local cache
 - **Views**: Declarative SwiftUI views, no business logic
 - **ViewModels**: `@Observable` classes handling state and business logic
-- **Services**: Notification scheduling and API communication
+- **Services**: Authentication, Firestore sync, notification scheduling, and API communication
 
 ## API
 
@@ -154,9 +166,10 @@ Edit `Constants.swift` to customize:
 
 ## Notes
 
-- All data is stored **locally** on the device using SwiftData
-- No user accounts or cloud sync required
+- User account data is stored under the signed-in Firebase user in Cloud Firestore
+- SwiftData is used as the on-device cache for the active account
 - Notifications use `UNUserNotificationCenter` (local only, no push server needed)
+- Signing out clears the local cache and cancels pending reminders on that device
 - The app handles iOS's 64 pending notification limit by refreshing schedules on app foreground
 
 ## License
