@@ -537,7 +537,7 @@ final class UserDataSyncService {
 
 private extension DocumentReference {
     func setDataAsync<T: Encodable>(from value: T, merge: Bool = false) async throws {
-        try await withCheckedThrowingContinuation { continuation in
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             do {
                 try setData(from: value, merge: merge) { error in
                     if let error {
@@ -553,7 +553,7 @@ private extension DocumentReference {
     }
 
     func deleteAsync() async throws {
-        try await withCheckedThrowingContinuation { continuation in
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             delete { error in
                 if let error {
                     continuation.resume(throwing: error)
@@ -567,7 +567,7 @@ private extension DocumentReference {
 
 private extension Query {
     func getDocumentsAsync() async throws -> QuerySnapshot {
-        try await withCheckedThrowingContinuation { continuation in
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<QuerySnapshot, Error>) in
             getDocuments { snapshot, error in
                 if let error {
                     continuation.resume(throwing: error)
@@ -587,7 +587,7 @@ private extension Query {
 
 private extension WriteBatch {
     func commitAsync() async throws {
-        try await withCheckedThrowingContinuation { continuation in
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             commit { error in
                 if let error {
                     continuation.resume(throwing: error)

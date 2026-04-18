@@ -11,6 +11,7 @@ import Observation
 
 /// ViewModel for managing reminders for a specific medicine.
 /// Handles creating, editing, toggling, and deleting reminders, plus notification scheduling.
+@MainActor
 @Observable
 final class ReminderViewModel {
     // MARK: - Form Fields

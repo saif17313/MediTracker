@@ -28,13 +28,13 @@ final class UserSessionStore {
     init(
         modelContext: ModelContext,
         authService: AuthService? = AuthService(),
-        dataSyncService: UserDataSyncService = UserDataSyncService(),
+        dataSyncService: UserDataSyncService? = nil,
         deviceIdentityService: DeviceIdentityService = .shared,
         firebaseConfigurationState: FirebaseConfigurationState
     ) {
         self.modelContext = modelContext
         self.authService = authService
-        self.dataSyncService = dataSyncService
+        self.dataSyncService = dataSyncService ?? UserDataSyncService()
         self.deviceIdentityService = deviceIdentityService
         self.firebaseConfigurationState = firebaseConfigurationState
 
@@ -49,7 +49,7 @@ final class UserSessionStore {
         self.init(
             modelContext: modelContext,
             authService: nil,
-            dataSyncService: UserDataSyncService(),
+            dataSyncService: nil,
             deviceIdentityService: .shared,
             firebaseConfigurationState: .configured
         )
@@ -150,7 +150,6 @@ final class UserSessionStore {
         do {
             try authService.signOut()
             authState = .signedOut
-            clearLocalData()
             NotificationService.shared.cancelAllPendingReminders()
         } catch {
             errorMessage = error.localizedDescription
@@ -337,10 +336,8 @@ final class UserSessionStore {
                 case .loading:
                     break
                 case .signedOut:
-                    self.clearLocalData()
                     NotificationService.shared.cancelAllPendingReminders()
                 case .signedIn:
-                    self.clearLocalData()
                     NotificationService.shared.cancelAllPendingReminders()
                     await self.refreshCurrentUserData()
                 }

@@ -37,7 +37,7 @@ final class AuthService {
     }
 
     func signIn(email: String, password: String) async throws -> AuthenticatedUser {
-        try await withCheckedThrowingContinuation { continuation in
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<AuthenticatedUser, Error>) in
             auth.signIn(withEmail: email, password: password) { result, error in
                 if let error {
                     continuation.resume(throwing: error)
@@ -55,7 +55,7 @@ final class AuthService {
     }
 
     func signUp(email: String, password: String) async throws -> AuthenticatedUser {
-        try await withCheckedThrowingContinuation { continuation in
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<AuthenticatedUser, Error>) in
             auth.createUser(withEmail: email, password: password) { result, error in
                 if let error {
                     continuation.resume(throwing: error)
@@ -73,7 +73,7 @@ final class AuthService {
     }
 
     func sendPasswordReset(to email: String) async throws {
-        try await withCheckedThrowingContinuation { continuation in
+        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
             auth.sendPasswordReset(withEmail: email) { error in
                 if let error {
                     continuation.resume(throwing: error)

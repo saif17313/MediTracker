@@ -11,6 +11,7 @@ import Observation
 
 /// ViewModel for the medicine list screen.
 /// Handles fetching, filtering, and deleting medicines.
+@MainActor
 @Observable
 final class MedicineListViewModel {
     var medicines: [Medicine] = []

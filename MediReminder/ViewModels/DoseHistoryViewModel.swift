@@ -11,6 +11,7 @@ import Observation
 
 /// ViewModel for the dose history screen.
 /// Tracks dose records, calculates adherence statistics, and filters history by date/medicine.
+@MainActor
 @Observable
 final class DoseHistoryViewModel {
     // MARK: - State

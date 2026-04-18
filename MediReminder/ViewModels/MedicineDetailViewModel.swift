@@ -11,6 +11,7 @@ import Observation
 
 /// ViewModel for adding and editing a single medicine.
 /// Handles form state, validation, and saving to SwiftData.
+@MainActor
 @Observable
 final class MedicineDetailViewModel {
     // MARK: - Form Fields
