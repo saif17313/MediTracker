@@ -38,6 +38,13 @@ struct ContentView: View {
                 }
                 .tag(AppTab.search)
 
+            // MARK: - Scan Rx Tab
+            PrescriptionScanView()
+                .tabItem {
+                    Label(AppTab.scan.rawValue, systemImage: AppTab.scan.iconName)
+                }
+                .tag(AppTab.scan)
+
             // MARK: - Settings Tab
             SettingsView()
                 .tabItem {

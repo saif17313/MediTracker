@@ -84,6 +84,7 @@ enum AppTab: String, CaseIterable, Identifiable {
     case medicines = "Medicines"
     case history = "History"
     case search = "Drug Search"
+    case scan = "Scan Rx"
     case settings = "Settings"
 
     var id: String { rawValue }
@@ -93,6 +94,7 @@ enum AppTab: String, CaseIterable, Identifiable {
         case .medicines: return "pill.fill"
         case .history:   return "clock.fill"
         case .search:    return "magnifyingglass"
+        case .scan:      return "camera.viewfinder"
         case .settings:  return "gearshape.fill"
         }
     }

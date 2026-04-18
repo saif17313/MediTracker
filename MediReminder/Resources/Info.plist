@@ -20,5 +20,9 @@
 	<string>1</string>
 	<key>UILaunchScreen</key>
 	<dict/>
+	<key>NSCameraUsageDescription</key>
+	<string>MediReminder needs camera access to scan prescription photos.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>MediReminder needs photo library access to import prescription images.</string>
 </dict>
 </plist>
