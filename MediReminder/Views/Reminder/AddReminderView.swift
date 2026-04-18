@@ -176,7 +176,7 @@ struct AddReminderView: View {
         case .daily:
             return "Every day at \(timeStr)"
         case .everyOtherDay:
-            return "Every other day at \(timeStr)"
+            return "Every 15 days at \(timeStr)"
         case .weekly:
             let dayNames = viewModel.selectedDaysOfWeek.sorted().compactMap { day -> String? in
                 guard day >= 1, day <= 7 else { return nil }

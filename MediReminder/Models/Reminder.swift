@@ -58,7 +58,7 @@ final class Reminder {
         case .daily:
             return "Every day at \(formattedTime)"
         case .everyOtherDay:
-            return "Every other day at \(formattedTime)"
+            return "Every 15 days at \(formattedTime)"
         case .weekly:
             let dayNames = daysOfWeek.compactMap { dayNumber -> String? in
                 let formatter = DateFormatter()
@@ -90,7 +90,7 @@ enum ReminderFrequency: String, Codable, CaseIterable, Identifiable {
     var displayName: String {
         switch self {
         case .daily:        return "Daily"
-        case .everyOtherDay: return "Every Other Day"
+        case .everyOtherDay: return "Every 15 Days"
         case .weekly:       return "Weekly"
         case .custom:       return "Custom"
         }

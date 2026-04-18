@@ -75,8 +75,8 @@ final class NotificationService {
             scheduleDailyReminder(content: content, reminder: reminder)
 
         case .everyOtherDay:
-            // Schedule for a fixed horizon to handle every-other-day pattern
-            scheduleIntervalReminder(content: content, reminder: reminder, medicine: medicine, intervalDays: 2)
+            // Schedule for a fixed horizon to handle 15-day pattern
+            scheduleIntervalReminder(content: content, reminder: reminder, medicine: medicine, intervalDays: 15)
 
         case .weekly:
             scheduleWeeklyReminder(content: content, reminder: reminder)
